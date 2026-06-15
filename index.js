@@ -44,29 +44,36 @@ for (
     );
 }
 
-console.log(collisionsMap);
-console.log(collisionsMap[0][0]);
-console.log(collisionsMap[7][7]);
-
 function start() {
 
-     if (movingUp) {
+    const x = canvas.width / 2 - playerSize / 2;
+    const y = canvas.height / 2 - playerSize / 2;
+
+    const worldX = -mapX + x;
+    const worldY = -mapY + y;
+
+    const column = Math.floor(worldX / 96);
+    const row = Math.floor(worldY / 96);
+
+    if (movingUp) {
         mapY = mapY + 2;
     }
 
-     if (movingDown) {
+    if (movingDown) {
         mapY = mapY - 2;
     }
 
-
-     if (movingRight) {
-        mapX = mapX - 2;
+     if (
+    movingRight &&
+    collisionsMap[row][column + 0] !== 84
+    ) {
+    mapX = mapX - 2;
     }
+    
 
-     if (movingLeft) {
+    if (movingLeft) {
         mapX = mapX + 2;
     }
-
 
     c.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -74,9 +81,6 @@ function start() {
     c.fillRect(0, 0, canvas.width, canvas.height);
 
     c.drawImage(image, mapX, mapY);
-
-    const x = canvas.width / 2 - playerSize / 2;
-    const y = canvas.height / 2 - playerSize / 2;
 
     c.drawImage(currentImage, x, y, playerSize, playerSize);
 

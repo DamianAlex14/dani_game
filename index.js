@@ -61,7 +61,7 @@ const column = Math.floor(centerX / tileSize);
 const hitbox = 20;
 
 // Arriba
-const rowUp = Math.floor((centerY - playerSize / 2 + hitbox) / tileSize);
+const rowUp = Math.floor((centerY - playerSize / 2 + hitbox + 10) / tileSize);
 
 // Abajo
 const rowDown = Math.floor((centerY + playerSize / 2 - hitbox + 8) / tileSize);
@@ -196,8 +196,112 @@ downButton.addEventListener(
     }
 );
 
+const directionKeyStack = [];
 
+function keyToDirection(key) {
+    switch (key) {
+        case 'd':
+        case 'D':
+            return 'right';
+        case 'a':
+        case 'A':
+            return 'left';
+        case 'w':
+        case 'W':
+            return 'up';
+        case 's':
+        case 'S':
+            return 'down';
+        default:
+            return null;
+    }
+}
 
+function updateCurrentImageFromStack() {
+    const activeDirection = directionKeyStack[directionKeyStack.length - 1];
+
+    switch (activeDirection) {
+        case 'right':
+            currentImage = getoRightImage;
+            break;
+        case 'left':
+            currentImage = getoLeftImage;
+            break;
+        case 'up':
+            currentImage = getoUpImage;
+            break;
+        case 'down':
+            currentImage = getoDownImage;
+            break;
+    }
+}
+
+window.addEventListener(
+    'keydown',
+    (event) => {
+        const direction = keyToDirection(event.key);
+        if (!direction) return;
+
+        switch (direction) {
+            case 'right':
+                movingRight = true;
+                console.log(movingRight);
+                break;
+            case 'left':
+                movingLeft = true;
+                console.log(movingLeft);
+                break;
+            case 'up':
+                movingUp = true;
+                console.log(movingUp);
+                break;
+            case 'down':
+                movingDown = true;
+                console.log(movingDown);
+                break;
+        }
+
+        if (!directionKeyStack.includes(direction)) {
+            directionKeyStack.push(direction);
+        }
+
+        updateCurrentImageFromStack();
+    }
+);
+
+window.addEventListener(
+    'keyup',
+    (event) => {
+        const direction = keyToDirection(event.key);
+        if (!direction) return;
+
+        switch (direction) {
+            case 'right':
+                movingRight = false;
+                console.log(movingRight);
+                break;
+            case 'left':
+                movingLeft = false;
+                console.log(movingLeft);
+                break;
+            case 'up':
+                movingUp = false;
+                console.log(movingUp);
+                break;
+            case 'down':
+                movingDown = false;
+                console.log(movingDown);
+                break;
+        }
+
+        const index = directionKeyStack.indexOf(direction);
+        if (index !== -1) {
+            directionKeyStack.splice(index, 1);
+        }
+
+        updateCurrentImageFromStack();
+    }
+);
 
 image.onload = check;
 getoDownImage.onload = check;

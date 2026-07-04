@@ -26,12 +26,19 @@ let currentCollisionsMap;
 const MAP1_TO_MAP2_TRIGGER_ROW = 0;
 const MAP1_TO_MAP2_TRIGGER_COLUMN = 14;
 
+const MAP2_TO_MAP1_TRIGGER_ROW = 29;
+const MAP2_TO_MAP1_TRIGGER_COLUMN = 14;
+
 // Punto de entrada al Mapa 2: se define como Fila/Columna y se calcula
 // automáticamente en píxeles más abajo (una vez que mapScale y playerSize existen).
-const MAP2_ENTRY_ROW = 29;
+const MAP2_ENTRY_ROW = 28;
 const MAP2_ENTRY_COLUMN = 14;
+const MAP1_ENTRY_ROW = 1;
+const MAP1_ENTRY_COLUMN = 14;
 let MAP2_ENTRY_X; // se calcula abajo
 let MAP2_ENTRY_Y; // se calcula abajo
+let MAP1_ENTRY_X; // se calcula abajo
+let MAP1_ENTRY_Y; // se calcula abajo
 
 let movingUp = false;
 let movingDown = false;
@@ -47,7 +54,7 @@ const playerSize = 64;
 let mapX = -480;
 let mapY = -440;
 
-// --- Cálculo automático del punto de entrada al Mapa 2 ---
+// --- Cálculo automático de los puntos de entrada al Mapa 2 y al Mapa 1 ---
 // tileSize: mismo cálculo que se usa dentro de start() (16 * mapScale)
 // x, y: posición fija del jugador en pantalla, igual que dentro de start()
 {
@@ -55,14 +62,23 @@ let mapY = -440;
     const playerScreenX = canvas.width / 2 - playerSize / 2;
     const playerScreenY = canvas.height / 2 - playerSize / 2;
 
-    // Centro de la celda (fila, columna) objetivo, en coordenadas del mundo/mapa
-    const targetCenterX = MAP2_ENTRY_COLUMN * tileSizeForEntry + tileSizeForEntry / 2;
-    const targetCenterY = MAP2_ENTRY_ROW * tileSizeForEntry + tileSizeForEntry / 2;
+    // Centro de la celda (fila, columna) objetivo en el Mapa 2, en coordenadas del mundo/mapa
+    const map2TargetCenterX = MAP2_ENTRY_COLUMN * tileSizeForEntry + tileSizeForEntry / 2;
+    const map2TargetCenterY = MAP2_ENTRY_ROW * tileSizeForEntry + tileSizeForEntry / 2;
 
     // Despejamos mapX/mapY de: centerX = -mapX + x + playerSize/2
-    MAP2_ENTRY_X = playerScreenX + playerSize / 2 - targetCenterX;
-    MAP2_ENTRY_Y = playerScreenY + playerSize / 2 - targetCenterY;
+    MAP2_ENTRY_X = playerScreenX + playerSize / 2 - map2TargetCenterX;
+    MAP2_ENTRY_Y = playerScreenY + playerSize / 2 - map2TargetCenterY;
+
+    // Centro de la celda (fila, columna) objetivo en el Mapa 1, en coordenadas del mundo/mapa
+    const map1TargetCenterX = MAP1_ENTRY_COLUMN * tileSizeForEntry + tileSizeForEntry / 2;
+    const map1TargetCenterY = MAP1_ENTRY_ROW * tileSizeForEntry + tileSizeForEntry / 2;
+
+    // Despejamos mapX/mapY de: centerX = -mapX + x + playerSize/2
+    MAP1_ENTRY_X = playerScreenX + playerSize / 2 - map1TargetCenterX;
+    MAP1_ENTRY_Y = playerScreenY + playerSize / 2 - map1TargetCenterY;
 }
+
 
 const collisionsMap = [];
 const collisionsMap2 = []; // Mapa 2
@@ -169,6 +185,17 @@ console.log("Fila:", row, "Columna:", column);
         mapY = MAP2_ENTRY_Y;
     }
 
+     if (
+        currentMap === 2 &&
+        playerRow === MAP2_TO_MAP1_TRIGGER_ROW &&
+        playerColumn === MAP2_TO_MAP1_TRIGGER_COLUMN
+    ) {
+        currentMap = 1;
+        currentMapImage = image;
+        currentCollisionsMap = collisionsMap;
+        mapX = MAP1_ENTRY_X;
+        mapY = MAP1_ENTRY_Y;
+    }
     c.clearRect(0, 0, canvas.width, canvas.height);
 
     c.fillStyle = 'black';
@@ -378,7 +405,7 @@ getoRightImage.onload = check;
 getoLeftImage.onload = check;
 
 image.src = '/assets/images/Map1.png';
-image2.src = '/assets/images/Map2.png'; 
+image2.src = '/assets/images/Map2.png';
 getoUpImage.src = '/assets/images/backGeto.png';
 getoDownImage.src = '/assets/images/frontGeto.png';
 getoRightImage.src = '/assets/images/rightGeto.png';

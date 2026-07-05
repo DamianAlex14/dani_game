@@ -19,12 +19,17 @@ const getoLeftImage = new Image();
 const getoRightImage = new Image();
 const topImage = new Image();
 const topImage2 = new Image();
+const blackCurseImage = new Image();
+const whiteCurseImage = new Image();
+const heartImage = new Image();
+const noteImage = new Image();
 
 
 // --- Sistema de cambio de mapa ---
 let currentMap = 1;
 let currentMapImage = image;
 let currentCollisionsMap; 
+
 // Casilla de activación (trigger tile) para pasar del Mapa 1 al Mapa 2
 const MAP1_TO_MAP2_TRIGGER_ROW = 0;
 const MAP1_TO_MAP2_TRIGGER_COLUMN = 14;
@@ -43,6 +48,57 @@ let MAP2_ENTRY_Y; // se calcula abajo
 let MAP1_ENTRY_X; // se calcula abajo
 let MAP1_ENTRY_Y; // se calcula abajo
 
+// --- Objetos del mapa (corazones, maldiciones, notas, jefe) ---
+// Se llenan al cargar cada mapa mediante loadMapObjects().
+let hearts = [];
+let curses = [];
+let notes = [];
+let boss = null;
+
+// --- Sistema de vida ---
+const MAX_LIVES = 3;
+const HITS_PER_LIFE = 3;
+let playerLives = MAX_LIVES;
+let playerHits = 0;
+let gameOver = false;
+
+// --- Inventario de notas y cartas ---
+const inventory = {
+    notes: [],   // ids de notas conseguidas, sin duplicados
+    letters: []  // ids de cartas conseguidas, sin duplicados
+};
+
+// --- Popup activo (nota/carta mostrándose antes de guardarse) ---
+let activePopup = null; // { type: "note" | "letter", id: "3" } o null si no hay popup
+
+// --- Tamaño y posición del popup de nota/carta en pantalla ---
+const POPUP_WIDTH = 320;
+const POPUP_HEIGHT = 480;
+const POPUP_X = (canvas.width - POPUP_WIDTH) / 2;
+const POPUP_Y = (canvas.height - POPUP_HEIGHT) / 2;
+
+// --- Caché de imágenes de notas/cartas (carga bajo demanda) ---
+const noteImageCache = {};
+const letterImageCache = {};
+
+function getNoteImage(noteId) {
+    if (!noteImageCache[noteId]) {
+        const img = new Image();
+        img.src = `/assets/images/note${noteId}.png`;
+        noteImageCache[noteId] = img;
+    }
+    return noteImageCache[noteId];
+}
+
+function getLetterImage(letterId) {
+    if (!letterImageCache[letterId]) {
+        const img = new Image();
+        img.src = `/assets/images/letter${letterId}.png`;
+        letterImageCache[letterId] = img;
+    }
+    return letterImageCache[letterId];
+}
+
 let movingUp = false;
 let movingDown = false;
 let movingRight = false;
@@ -51,6 +107,7 @@ let movingLeft = false;
 let currentImage = getoDownImage
 
 let loaded = 0;
+
 
 const mapScale = 4;
 const playerSize = 64;
@@ -111,6 +168,76 @@ for (
 
 currentCollisionsMap = collisionsMap;
 
+// --- Carga de objetos (corazones, maldiciones, notas, jefe) desde el JSON del mapa ---
+// mapData: objeto JSON exportado por Tiled (igual estructura que tus archivos Map1.json / Map2.json)
+// Recorre la capa "Objects" del mapa y llena hearts/curses/notes/boss según el nombre de cada objeto.
+
+function getObjectProperty(object, propertyName) {
+    if (!object.properties) return null;
+    const found = object.properties.find(p => p.name === propertyName);
+    return found ? found.value : null;
+}
+
+function loadMapObjects(mapData) {
+    // Reiniciamos los arrays: cada mapa tiene sus propios objetos.
+    hearts = [];
+    curses = [];
+    notes = [];
+    boss = null;
+
+    const mapObjects = mapData.layers.find(layer => layer.name === "Objects").objects;
+
+    for (const object of mapObjects) {
+        switch (object.name) {
+            case "H": // Corazón
+                hearts.push({
+                    x: object.x,
+                    y: object.y,
+                    collected: false
+                });
+                break;
+            case "BR": // Maldición negra (Black Rabbit)
+                curses.push({
+                    x: object.x,
+                    y: object.y,
+                    type: "black",
+                    alive: true,
+                    noteId: getObjectProperty(object, "noteId")
+                });
+                break;
+            case "WR": // Maldición blanca (White Rabbit)
+                curses.push({
+                    x: object.x,
+                    y: object.y,
+                    type: "white",
+                    alive: true,
+                    noteId: getObjectProperty(object, "noteId")
+                });
+                break;
+            case "PN": // Nota principal (bienvenida)
+                notes.push({
+                    x: object.x,
+                    y: object.y,
+                    read: false
+                });
+                break;
+            case "Boss":
+                boss = {
+                    x: object.x,
+                    y: object.y,
+                    alive: true,
+                    letter: getObjectProperty(object, "letter")
+                };
+                break;
+        }
+    }
+}
+
+// TODO: "mapData1" y "mapData2" deben ser los objetos JSON de Map1 y Map2
+// (el mismo JSON que exporta Tiled), disponibles como variables globales,
+// igual que ya tienes "collisions" y "collisions2".
+loadMapObjects(mapData1);
+
 function start() {
 
     const x = canvas.width / 2 - playerSize / 2;
@@ -120,7 +247,6 @@ function start() {
     const centerY = -mapY + y + playerSize / 2;
 
 const tileSize = 16 * mapScale;
-
 const row = Math.floor(centerY / tileSize);
 const column = Math.floor(centerX / tileSize);
 
@@ -186,6 +312,7 @@ console.log("Fila:", row, "Columna:", column);
         currentCollisionsMap = collisionsMap2;
         mapX = MAP2_ENTRY_X;
         mapY = MAP2_ENTRY_Y;
+        loadMapObjects(mapData2); // cargamos los objetos propios del Mapa 2
     }
 
      if (
@@ -198,6 +325,7 @@ console.log("Fila:", row, "Columna:", column);
         currentCollisionsMap = collisionsMap;
         mapX = MAP1_ENTRY_X;
         mapY = MAP1_ENTRY_Y;
+        loadMapObjects(mapData1); // volvemos a cargar los objetos del Mapa 1
     }
     c.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -216,7 +344,7 @@ console.log("Fila:", row, "Columna:", column);
 
     c.drawImage(currentImage, x, y, playerSize, playerSize);
 
-    if (currentMap === 1) {
+  if (currentMap === 1) {
     c.drawImage(
         topImage,
         mapX,
@@ -234,13 +362,34 @@ console.log("Fila:", row, "Columna:", column);
     );
 }
 
+// Dibujar maldiciones (para ambos mapas)
+for (const curse of curses) {
+
+    if (!curse.alive) continue;
+
+    const image =
+        curse.type === "black"
+            ? blackCurseImage
+            : whiteCurseImage;
+
+    c.drawImage(
+        image,
+        mapX + curse.x,
+        mapY + curse.y,
+        32,
+        32
+    );
+}
+
     requestAnimationFrame(start);
 }
 
 
+
+
 function check() {
     loaded++;
-    if (loaded === 8) start();
+    if (loaded === 12) start();
 }
 
 rightButton.addEventListener(
@@ -426,6 +575,10 @@ getoDownImage.onload = check;
 getoUpImage.onload = check;
 getoRightImage.onload = check;
 getoLeftImage.onload = check;
+blackCurseImage.onload = check;
+whiteCurseImage.onload = check;
+heartImage.onload = check;
+noteImage.onload = check;
 
 image.src = '/assets/images/Map1.png';
 image2.src = '/assets/images/Map2.png';
@@ -435,3 +588,7 @@ getoUpImage.src = '/assets/images/backGeto.png';
 getoDownImage.src = '/assets/images/frontGeto.png';
 getoRightImage.src = '/assets/images/rightGeto.png';
 getoLeftImage.src = '/assets/images/leftGeto.png';
+blackCurseImage.src = "/assets/images/rabbitLeft.png";
+whiteCurseImage.src = "/assets/images/WRabbitLeft.png";
+heartImage.src = "/assets/images/heart.png";
+noteImage.src = "/assets/images/note.png";

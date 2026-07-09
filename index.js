@@ -1519,10 +1519,34 @@ function drawRestartButton(label) {
     };
 }
 
-const HUD_HEARTS_ZONE_X = 20;
-const HUD_HEARTS_ZONE_Y = 16;
-const HUD_HEART_SIZE = 28;
-const HUD_HEART_GAP = 6;
+let HUD_HEARTS_ZONE_X = 20;
+let HUD_HEARTS_ZONE_Y = 16;
+let HUD_HEART_SIZE = 28;
+let HUD_HEART_GAP = 6;
+let HUD_SCORE_FONT_SIZE = 12;
+
+// Tamaños físicos deseados en pantalla (px reales), independientes
+// del dispositivo. Se recalculan cada vez que el canvas cambia de tamaño.
+function updateHUDScale() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return; // canvas aún no visible
+    const displayScale = rect.width / canvas.width; // ej: 0.4 si el canvas se ve al 40% de su resolución interna
+
+    const targetHeartPx = 22;
+    const targetGapPx = 5;
+    const targetMarginPx = 14;
+    const targetFontPx = 11;
+
+    HUD_HEART_SIZE = targetHeartPx / displayScale;
+    HUD_HEART_GAP = targetGapPx / displayScale;
+    HUD_HEARTS_ZONE_X = targetMarginPx / displayScale;
+    HUD_HEARTS_ZONE_Y = targetMarginPx / displayScale;
+    HUD_SCORE_FONT_SIZE = targetFontPx / displayScale;
+}
+
+window.addEventListener('resize', updateHUDScale);
+window.addEventListener('orientationchange', updateHUDScale);
+updateHUDScale();
 
 function drawHUD() {
     c.save();
@@ -1568,7 +1592,7 @@ function drawHUD() {
     c.restore();
 
     c.fillStyle = "white";
-    c.font = "12px 'Press Start 2P', sans-serif";
+    c.font = `${HUD_SCORE_FONT_SIZE}px 'Press Start 2P', sans-serif`;
     c.fillText(`Puntos: ${score}`, canvas.width - 150, 35);
 }
 

@@ -1591,9 +1591,12 @@ function drawHUD() {
     }
     c.restore();
 
+        c.save();
     c.fillStyle = "white";
     c.font = `${HUD_SCORE_FONT_SIZE}px 'Press Start 2P', sans-serif`;
-    c.fillText(`Puntos: ${score}`, canvas.width - 150, 35);
+    c.textAlign = "right";
+    c.fillText(`Puntos: ${score}`, canvas.width - 20, 35);
+    c.restore();
 }
 
 function drawPauseOverlay() {

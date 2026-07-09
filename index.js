@@ -355,7 +355,7 @@ class Gojo {
         this.active = true;
         this.followingEnabled = false;
         this.state = "idle";
-        this.speed = 2.5;
+        this.speed = 2;
         // FIX #4: distancia de seguimiento reducida (antes 70) para que
         // Gojo se mantenga mucho más cerca de Geto y el seguimiento se
         // sienta más fluido.
@@ -368,7 +368,7 @@ class Gojo {
         // ida y vuelta en frames consecutivos, lo cual antes disparaba
         // this.direction/setAnimation() constantemente y hacía que la
         // animación de caminar pareciera reproducirse a toda velocidad.
-        this.stopDistance = 44;
+        this.stopDistance = 38;
         this.attackRange = 60;
         this.attackCooldown = 0;
         this.lives = 3;
@@ -420,15 +420,7 @@ class Gojo {
         const dy = geto.y - this.y;
         const dist = Math.hypot(dx, dy);
 
-        // FIX #5 (ANTI-JITTER): histéresis de dos umbrales en vez de un
-        // único "if (dist > this.followDistance)". Antes, al estar justo
-        // en el borde de followDistance, Gojo alternaba isMoving=true/false
-        // en cada tick (rebote), y cada cambio de dirección resultante
-        // reseteaba el AnimationController (frame=0, elapsed=0) muchas
-        // veces por segundo en vez de una vez cada frameDuration (150ms).
-        // Eso era lo que hacía "ver" la animación acelerada: no es que
-        // corriera más frames por segundo, es que se reiniciaba
-        // constantemente y encadenaba resets muy seguidos.
+        
         if (dist > this.followDistance) {
             this.isMoving = true;
         } else if (dist < this.stopDistance) {
@@ -448,8 +440,9 @@ class Gojo {
             const normalizedDelta = Math.min(deltaTime || 16.6, 100) / (1000 / 60);
             const stepX = (dx / dist) * this.speed * normalizedDelta;
             const stepY = (dy / dist) * this.speed * normalizedDelta;
-
-            const resolved = resolveMoveWithCollisions(this.x, this.y, stepX, stepY, this.radius);
+            
+            const resolved = resolveMoveWithCollisions(this.x, this.y, stepX, stepY, this.radius, 12);
+            
             this.x = resolved.x;
             this.y = resolved.y;
 
@@ -678,19 +671,38 @@ function isTileSolidAtWorldPos(worldX, worldY) {
     return currentCollisionsMap[row]?.[col] === SOLID_TILE_VALUE;
 }
 
-function resolveMoveWithCollisions(fromX, fromY, dx, dy, radius) {
+function resolveMoveWithCollisions(fromX, fromY, dx, dy, radius, hitbox = 0) {
     let newX = fromX;
     let newY = fromY;
     const tryX = fromX + dx;
-    const blockedX =
-        isTileSolidAtWorldPos(tryX + Math.sign(dx) * radius, fromY - radius + 2) ||
-        isTileSolidAtWorldPos(tryX + Math.sign(dx) * radius, fromY + radius - 2);
-    if (!blockedX || dx === 0) newX = tryX;
-    const tryY = fromY + dy;
-    const blockedY =
-        isTileSolidAtWorldPos(newX - radius + 2, tryY + Math.sign(dy) * radius) ||
-        isTileSolidAtWorldPos(newX + radius - 2, tryY + Math.sign(dy) * radius);
-    if (!blockedY || dy === 0) newY = tryY;
+
+const blockedX =
+    isTileSolidAtWorldPos(
+        tryX + Math.sign(dx) * (radius - hitbox),
+        fromY - radius + hitbox + 2
+    ) ||
+    isTileSolidAtWorldPos(
+        tryX + Math.sign(dx) * (radius - hitbox),
+        fromY + radius - hitbox - 2
+    );
+
+if (!blockedX || dx === 0)
+    newX = tryX;
+
+const tryY = fromY + dy;
+
+const blockedY =
+    isTileSolidAtWorldPos(
+        newX - radius + hitbox + 2,
+        tryY + Math.sign(dy) * (radius - hitbox)
+    ) ||
+    isTileSolidAtWorldPos(
+        newX + radius - hitbox - 2,
+        tryY + Math.sign(dy) * (radius - hitbox)
+    );
+
+if (!blockedY || dy === 0)
+    newY = tryY;
     return { x: newX, y: newY };
 }
 
@@ -698,6 +710,7 @@ class Curse {
     constructor(x, y, type, noteId) {
         this.x = x;
         this.y = y;
+        this.hitbox = 12;
         this.type = type;
         this.noteId = noteId;
         this.alive = true;
@@ -846,7 +859,7 @@ class Boss {
     constructor(x, y, letterId) {
         this.x = x;
         this.y = y;
-        this.size = 96;
+        this.size = 128;
         this.letterId = letterId || "1";
         this.alive = true;
         this.state = "dormant";
@@ -859,7 +872,7 @@ class Boss {
         this.lives = 1;
         this.maxLives = 1;
         this.hits = 0;
-        this.hitsPerLife = 5;
+        this.hitsPerLife = 6;
         this.retreatTimer = 0;
 
         // FIX #2: se inicializa una dirección por defecto ("down"); antes
@@ -1398,7 +1411,6 @@ function loadMap3() {
     hearts = [];
 }
 
-// FIX: controladores de animación dedicados para la escena de baile.
 const gojoDanceAnim = new AnimationController("gojo", 150);
 gojoDanceAnim.setAnimation("dance", "none");
 const getoDanceAnim = new AnimationController("geto", 150);
@@ -1415,21 +1427,21 @@ function drawEndingScene() {
     playerDanceAnim.update(deltaTime);
 
     if (getoDanceAnim.isReady()) {
-        getoDanceAnim.draw(c, canvas.width / 2 - 160, canvas.height / 2 - 60, 80, 120);
+        getoDanceAnim.draw(c, canvas.width / 2 - 160, canvas.height / 2 - 60, 64, 64);
     } else {
-        c.drawImage(danceGetoImage, canvas.width / 2 - 160, canvas.height / 2 - 60, 80, 120);
+        c.drawImage(danceGetoImage, canvas.width / 2 - 160, canvas.height / 2 - 60, 64, 64);
     }
 
     if (gojoDanceAnim.isReady()) {
-        gojoDanceAnim.draw(c, canvas.width / 2 + 80, canvas.height / 2 - 60, 80, 120);
+        gojoDanceAnim.draw(c, canvas.width / 2 + 80, canvas.height / 2 - 60, 64, 64);
     } else {
-        c.drawImage(danceGojoImage, canvas.width / 2 + 80, canvas.height / 2 - 60, 80, 120);
+        c.drawImage(danceGojoImage, canvas.width / 2 + 80, canvas.height / 2 - 60, 64, 64);
     }
 
     if (playerDanceAnim.isReady()) {
-        playerDanceAnim.draw(c, canvas.width / 2 - 40, canvas.height / 2 - 140, 80, 120);
+        playerDanceAnim.draw(c, canvas.width / 2 - 40, canvas.height / 2 - 60, 64, 64);
     } else {
-        c.drawImage(danceAuthorImage, canvas.width / 2 - 40, canvas.height / 2 - 140, 80, 120);
+        c.drawImage(danceAuthorImage, canvas.width / 2 - 40, canvas.height / 2 - 60, 64, 64);
     }
 
     drawRestartButton("¡Felicidades! Toca para volver a empezar");
@@ -1482,7 +1494,10 @@ function restartGame() {
 }
 
 function drawRestartButton(label) {
-    const btnX = canvas.width / 2 - 120, btnY = canvas.height - 80, btnW = 440, btnH = 50;
+    const btnW = 440;
+    const btnH = 50;
+    const btnX = (canvas.width - btnW) / 2;
+    const btnY = canvas.height - 80;
     c.fillStyle = "#333";
     c.fillRect(btnX, btnY, btnW, btnH);
     c.strokeStyle = "white";

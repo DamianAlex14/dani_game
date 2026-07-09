@@ -1025,7 +1025,7 @@ const POPUP_X = (canvas.width - POPUP_WIDTH) / 2;
 const POPUP_Y = (canvas.height - POPUP_HEIGHT) / 2;
 
 const letterImage = new Image();
-letterImage.src = "assets/images/letter.png";
+letterImage.src = "../assets/images/letter.png";
 
 const NOTES = {
     "PN": { title: "Nota Principal", text: "Encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷" },
@@ -2161,35 +2161,35 @@ letter.onload = check;
 topImage.onload = check;
 topImage2.onload = check;
 
-image.src = 'assets/images/Map1.png';
-image2.src = 'assets/images/Map2.png';
-image3.src = 'assets/images/Map3.png';
-topImage.src = 'assets/images/Map1CapaSup.png';
-topImage2.src = 'assets/images/Map2CapaSup.png';
-getoUpImage.src = 'assets/images/backGeto.png';
-getoDownImage.src = 'assets/images/frontGeto.png';
-getoRightImage.src = 'assets/images/rightGeto.png';
-getoLeftImage.src = 'assets/images/leftGeto.png';
-gojoUpImage.src = 'assets/images/backGojo.png';
-gojoDownImage.src = 'assets/images/frontGojo.png';
-gojoLeftImage.src = 'assets/images/leftGojo.png';
-gojoRightImage.src = 'assets/images/rightGojo.png';
-blackRabbitUpImage.src = 'assets/images/rabbitBack.png';
-blackRabbitDownImage.src = 'assets/images/rabbitFront.png';
-blackRabbitLeftImage.src = 'assets/images/rabbitLeft.png';
-blackRabbitRightImage.src = 'assets/images/rabbiRight.png';
-whiteRabbitUpImage.src = 'assets/images/WRabbitBack.png';
-whiteRabbitDownImage.src = 'assets/images/WRabbitFront.png';
-whiteRabbitLeftImage.src = 'assets/images/WRabbitLeft.png';
-whiteRabbitRightImage.src = 'assets/images/WRabbitRight.png';
-heartImage.src = "assets/images/heart.png";
-noteImage.src = "assets/images/note.png";
-letter.src = "assets/images/bossLetter.png";
-bossImage.src = "assets/images/bossFront.png";
-danceGetoImage.src = "assets/images/danceGeto.png";
-danceGojoImage.src = "assets/images/danceGojo.png";
-danceAuthorImage.src = "assets/images/meDance.png";
-cakeImage.src = "assets/images/cake.png";
+image.src = '../assets/images/Map1.png';
+image2.src = '../assets/images/Map2.png';
+image3.src = '../assets/images/Map3.png';
+topImage.src = '../assets/images/Map1CapaSup.png';
+topImage2.src = '../assets/images/Map2CapaSup.png';
+getoUpImage.src = '../assets/images/backGeto.png';
+getoDownImage.src = '../assets/images/frontGeto.png';
+getoRightImage.src = '../assets/images/rightGeto.png';
+getoLeftImage.src = '../assets/images/leftGeto.png';
+gojoUpImage.src = '../assets/images/backGojo.png';
+gojoDownImage.src = '../assets/images/frontGojo.png';
+gojoLeftImage.src = '../assets/images/leftGojo.png';
+gojoRightImage.src = '../assets/images/rightGojo.png';
+blackRabbitUpImage.src = '../assets/images/rabbitBack.png';
+blackRabbitDownImage.src = '../assets/images/rabbitFront.png';
+blackRabbitLeftImage.src = '../assets/images/rabbitLeft.png';
+blackRabbitRightImage.src = '../assets/images/rabbiRight.png';
+whiteRabbitUpImage.src = '../assets/images/WRabbitBack.png';
+whiteRabbitDownImage.src = '../assets/images/WRabbitFront.png';
+whiteRabbitLeftImage.src = '../assets/images/WRabbitLeft.png';
+whiteRabbitRightImage.src = '../assets/images/WRabbitRight.png';
+heartImage.src = "../assets/images/heart.png";
+noteImage.src = "../assets/images/note.png";
+letter.src = "../assets/images/bossLetter.png";
+bossImage.src = "../assets/images/bossFront.png";
+danceGetoImage.src = "../assets/images/danceGeto.png";
+danceGojoImage.src = "../assets/images/danceGojo.png";
+danceAuthorImage.src = "../assets/images/meDance.png";
+cakeImage.src = "../assets/images/cake.png";
 
 // FIX #2: se renombran las claves "front"/"back" a "down"/"up" para
 // blackRabbit, whiteRabbit, gojo y boss. Estos personajes guardan su
@@ -2203,71 +2203,71 @@ cakeImage.src = "assets/images/cake.png";
 const ANIMATION_SOURCES = {
     blackRabbit: {
         walk: {
-            down: "assets/images/frontRabittWalk.png",
-            up:   "assets/images/backRabittWalk.png",
-            left:  "assets/images/leftRabittWalk.png",
-            right: "assets/images/rightRabittWalk.png",
+            down: "../assets/images/frontRabittWalk.png",
+            up:   "../assets/images/backRabittWalk.png",
+            left:  "../assets/images/leftRabittWalk.png",
+            right: "../assets/images/rightRabittWalk.png",
         },
     },
     whiteRabbit: {
         walk: {
-            down: "assets/images/frontWRabittWalk.png",
-            up:   "assets/images/backWRabittWalk.png",
-            left:  "assets/images/leftWRabittWalk.png",
-            right: "assets/images/rightWRabittWalk.png",
+            down: "../assets/images/frontWRabittWalk.png",
+            up:   "../assets/images/backWRabittWalk.png",
+            left:  "../assets/images/leftWRabittWalk.png",
+            right: "../assets/images/rightWRabittWalk.png",
         },
     },
     gojo: {
         walk: {
-            down: "assets/images/frontGojoWalk.png",
-            up:   "assets/images/backGojoWalk.png",
-            left:  "assets/images/leftGojoWalk.png",
-            right: "assets/images/rightGojoWalk.png",
+            down: "../assets/images/frontGojoWalk.png",
+            up:   "../assets/images/backGojoWalk.png",
+            left:  "../assets/images/leftGojoWalk.png",
+            right: "../assets/images/rightGojoWalk.png",
         },
         attack: {
-            down: "assets/images/frontGojoAttack.png",
-            up:   "assets/images/backGojoAttack.png",
-            left:  "assets/images/leftGojoAttack.png",
-            right: "assets/images/rightGojoAttack.png",
+            down: "../assets/images/frontGojoAttack.png",
+            up:   "../assets/images/backGojoAttack.png",
+            left:  "../assets/images/leftGojoAttack.png",
+            right: "../assets/images/rightGojoAttack.png",
         },
         dance: {
-            none: "assets/images/danceGojo.png",
+            none: "../assets/images/danceGojo.png",
         },
     },
     geto: {
         walk: {
-            front: "assets/images/frontGetoWalk.png",
-            back:  "assets/images/backGetoWalk.png",
-            left:  "assets/images/leftGetoWalk.png",
-            right: "assets/images/rightGetoWalk.png",
+            front: "../assets/images/frontGetoWalk.png",
+            back:  "../assets/images/backGetoWalk.png",
+            left:  "../assets/images/leftGetoWalk.png",
+            right: "../assets/images/rightGetoWalk.png",
         },
         attack: {
-            front: "assets/images/frontGetoAttack.png",
-            back:  "assets/images/backGetoAttack.png",
-            left:  "assets/images/leftGetoAttack.png",
-            right: "assets/images/rightGetoAttack.png",
+            front: "../assets/images/frontGetoAttack.png",
+            back:  "../assets/images/backGetoAttack.png",
+            left:  "../assets/images/leftGetoAttack.png",
+            right: "../assets/images/rightGetoAttack.png",
         },
         dance: {
-            none: "assets/images/danceGeto.png",
+            none: "../assets/images/danceGeto.png",
         },
     },
     boss: {
         walk: {
-            down: "assets/images/frontBossWalk.png",
-            up:   "assets/images/backBossWalk.png",
-            left:  "assets/images/leftBossWalk.png",
-            right: "assets/images/rightBossWalk.png",
+            down: "../assets/images/frontBossWalk.png",
+            up:   "../assets/images/backBossWalk.png",
+            left:  "../assets/images/leftBossWalk.png",
+            right: "../assets/images/rightBossWalk.png",
         },
         attack: {
-            down: "assets/images/frontBossAttack.png",
-            up:   "assets/images/backBossAttack.png",
-            left:  "assets/images/leftBossAttack.png",
-            right: "assets/images/rightBossAttack.png",
+            down: "../assets/images/frontBossAttack.png",
+            up:   "../assets/images/backBossAttack.png",
+            left:  "../assets/images/leftBossAttack.png",
+            right: "../assets/images/rightBossAttack.png",
         },
     },
     player: {
         dance: {
-            none: "assets/images/meDance.png",
+            none: "../assets/images/meDance.png",
         },
     },
 };

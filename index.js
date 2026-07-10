@@ -24,6 +24,19 @@ const attackButton = document.getElementById('attack');
 const inventoryButton = document.getElementById('inventory-btn');
 const pauseButton = document.getElementById('pause-btn');
 
+// Evita el menú contextual (long-press) en todos los botones táctiles
+// y en el canvas, para que mantener presionado nunca abra un popup
+// nativo de "Guardar imagen / Compartir / Imprimir".
+const touchControlButtons = [
+    upButton, downButton, leftButton, rightButton,
+    attackButton, inventoryButton, pauseButton
+];
+for (const btn of touchControlButtons) {
+    if (!btn) continue;
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
 const image = new Image();
 const image2 = new Image();
 const image3 = new Image();

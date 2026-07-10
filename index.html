@@ -36,8 +36,11 @@
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;   /* quita el menú de mantener presionado en iOS */
+            -webkit-user-select: none;     /* evita selección de texto/imagen al mantener presionado */
+            user-select: none;
         }
-
+        
         html, body {
             margin: 0;
             padding: 0;

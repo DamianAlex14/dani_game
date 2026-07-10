@@ -1911,6 +1911,23 @@ if (pauseButton) {
     });
 }
 
+// Intento de bloqueo real de orientación horizontal (solo funciona en
+// navegadores compatibles y tras interacción del usuario; si falla o
+// no está disponible, el truco CSS de arriba sigue como respaldo).
+function tryLockLandscape() {
+    if (document.fullscreenElement && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {
+            // Silenciosamente ignorado: el CSS de rotación forzada cubre este caso.
+        });
+    }
+}
+
+document.body.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.().then(tryLockLandscape).catch(() => {});
+    }
+}, { once: true });
+
 // FIX: deltaTime y lastFrameTime ahora son globales, declaradas ANTES de start().
 let lastFrameTime = performance.now();
 let deltaTime = 0;

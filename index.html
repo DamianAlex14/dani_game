@@ -274,6 +274,23 @@
             white-space: nowrap;
             pointer-events: none;
         }
+
+        /* =====================================================
+           FORZAR HORIZONTAL: si el dispositivo está en vertical,
+           se rota toda la página 90° visualmente.
+           ===================================================== */
+        @media screen and (orientation: portrait) {
+            html {
+                transform: rotate(90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                overflow-x: hidden;
+                position: absolute;
+                top: 0;
+                left: 100%;
+            }
+        }
     </style>
 </head>
 

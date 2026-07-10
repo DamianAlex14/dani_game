@@ -23,13 +23,13 @@
         /* clamp(mínimo, ideal-en-vmin, máximo):
         nunca más chico ni más grande que los límites,
         y escala proporcional en cualquier pantalla */
-        --dpad-btn-size: clamp(60px, 15vmin, 82px);
+        --dpad-btn-size: clamp(80px, 18vmin, 85px);
         --attack-btn-size: clamp(88px, 20vmin, 94px);
         --top-btn-size: clamp(38px, 9vmin, 54px);
 
         /* espaciados también escalables */
-        --edge-gap: clamp(20px, 60vmin, 30px);
-
+        --edge-gap: clamp(12px, 1.5vmin, 12px);
+        --side-gap: clamp(40px, 10vmin, 100px);
         --pixel-font: 'Press Start 2P', 'Pixelify Sans', 'Courier New', monospace;
     }
 
@@ -87,7 +87,7 @@
            ===================================================== */
         #controls {
         position: fixed;
-        left: var(--edge-gap);
+        left: var(--side-gap);
         bottom: var(--edge-gap);
         display: grid;
         grid-template-columns: var(--dpad-btn-size) var(--dpad-btn-size) var(--dpad-btn-size);
@@ -144,7 +144,7 @@
            ===================================================== */
         #attack-container {
         position: fixed;
-        right: var(--edge-gap);
+        right: var(--side-gap);
         bottom: var(--edge-gap);
         z-index: 20;
         user-select: none;
@@ -262,8 +262,9 @@
 
         .hud-heart .heart-fill {
             opacity: 1;
-            overflow: hidden;
-            width: 100%;
+            /* clip-path revela el corazón de izquierda a derecha manteniendo
+            su tamaño COMPLETO (igual que el clip() del canvas original),
+            en vez de encogerlo con "width" */
         }
 
         #hud-score {

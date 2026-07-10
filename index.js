@@ -1688,7 +1688,8 @@ function drawHUD() {
         }
 
         const fillEl = heartEl.querySelector('.heart-fill');
-        fillEl.style.width = `${fraction * 100}%`;
+        const hiddenPercent = (1 - fraction) * 100;
+        fillEl.style.clipPath = `inset(0 ${hiddenPercent}% 0 0)`;
     }
 
     hudScoreValue.textContent = score;

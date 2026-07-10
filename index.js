@@ -56,6 +56,7 @@ const danceAuthorImage = new Image();
 const cakeImage = new Image();
 const topImage = new Image();
 const topImage2 = new Image();
+const deadGojoImage = new Image();
 
 let currentMap = 1;
 let currentMapImage = image;
@@ -202,7 +203,7 @@ class AnimationController {
 // =====================================================================
 // SISTEMA DE VIDAS / DAÑO
 // =====================================================================
-const HITS_PER_LIFE = 3;
+const HITS_PER_LIFE = 2;
 const INVULNERABILITY_MS = 1000;
 const BLINK_INTERVAL_MS = 100;
 const HIT_STUN_FRAMES = 20; // FIX: constante que faltaba y rompía applyDamage()
@@ -212,6 +213,9 @@ const HIT_STUN_FRAMES = 20; // FIX: constante que faltaba y rompía applyDamage(
 // Se comparte entre ambos personajes para que el salto y la animación de
 // "attack" (200ms por frame) queden sincronizados visualmente.
 const ATTACK_JUMP_DURATION = 500;
+
+const GOJO_DEATH_BLINK_TIMES = 3;          
+const GOJO_DEATH_BLINK_INTERVAL_MS = 220;
 
 // --- Sistema viejo de animación por contador de frames de juego (aún usado como fallback) ---
 const SPRITE_FRAME_SIZE = 32;
@@ -411,9 +415,71 @@ class Gojo {
         // de la maldición atacada.
         this.attackJump = null;
         this.attackTarget = null;
+
+        // Sistema de muerte/resurrección
+        this.deathActive = false;
+        this.deathDialogueVisible = false;
+        this.posicionMuerte = { x: 0, y: 0 };
+        this.blinkVisible = true;
+        this.blinkTimer = 0;
+        this.blinkToggles = 0;
+        this.blinkDone = false;
     }
 
-    onDeath() {}
+    onDeath() {
+        this.posicionMuerte = { x: this.x, y: this.y };
+        this.deathActive = true;
+        this.deathDialogueVisible = true;
+        this.blinkVisible = true;
+        this.blinkTimer = 0;
+        this.blinkToggles = 0;
+        this.blinkDone = false;
+        this.active = false; // oculta el sprite normal mientras está "muerto"
+    }
+
+    updateDeathBlink(dt) {
+        if (!this.deathActive || this.blinkDone) return;
+        this.blinkTimer += dt;
+        if (this.blinkTimer < GOJO_DEATH_BLINK_INTERVAL_MS) return;
+        this.blinkTimer -= GOJO_DEATH_BLINK_INTERVAL_MS;
+        this.blinkVisible = !this.blinkVisible;
+        this.blinkToggles++;
+        if (this.blinkToggles >= GOJO_DEATH_BLINK_TIMES * 2) {
+            this.blinkDone = true;
+            this.blinkVisible = true; // queda fijo visible
+        }
+    }
+
+    drawDead(mapX, mapY) {
+        if (!this.deathActive) return;
+        if (!this.blinkDone && !this.blinkVisible) return;
+        const screenX = mapX + this.posicionMuerte.x - this.size / 2;
+        const screenY = mapY + this.posicionMuerte.y - this.size / 2;
+        if (deadGojoImage.complete && deadGojoImage.naturalWidth > 0) {
+            c.drawImage(deadGojoImage, screenX, screenY, this.size, this.size);
+        } else {
+            c.fillStyle = "#444";
+            c.fillRect(screenX, screenY, this.size, this.size);
+            c.strokeStyle = "#999";
+            c.strokeRect(screenX, screenY, this.size, this.size);
+        }
+    }
+
+    resurrect() {
+        this.x = this.posicionMuerte.x;
+        this.y = this.posicionMuerte.y;
+        this.lives = 1;
+        this.hits = 0;
+        this.alive = true;
+        this.active = true;
+        this.direction = "down";
+        this.invulnerable = true;
+        this.invulnerableUntil = performance.now() + INVULNERABILITY_MS;
+        this.animation.setAnimation("walk", this.direction);
+        this.animation.pauseAtIdle();
+        this.deathActive = false;
+        this.deathDialogueVisible = false;
+    }
 
     followGeto() {
         const dx = geto.x - this.x;
@@ -1322,10 +1388,18 @@ function checkPickups() {
         }
     }
 
-    for (const heart of hearts) {
+   for (const heart of hearts) {
         if (heart.collected) continue;
         if (Math.hypot(geto.x - heart.x, geto.y - heart.y) < PICKUP_DISTANCE) {
             heart.collected = true;
+
+            // Si Gojo está muerto, este corazón lo revive (sin importar
+            // la vida de Geto) en vez de otorgar puntos o curar.
+            if (gojo.deathActive) {
+                gojo.resurrect();
+                continue;
+            }
+
             score += 5;
             const getoFullLife = geto.hits === 0 && geto.lives === geto.maxLives;
             if (getoFullLife && gojo.active) {
@@ -1334,7 +1408,7 @@ function checkPickups() {
                 healGeto(1);
             }
         }
-    }
+    } 
 }
 
 let dialogueVisible = false;
@@ -1377,10 +1451,30 @@ function drawDialogue() {
     c.textAlign = "center";
     c.textBaseline = "middle";
     c.fillStyle = "white";
-    c.font = "14px 'Press Start 2P', sans-serif";
-    c.fillText("Gojo: \"Debemos derrotar a las maldiciones y escapar de aquí.\"", boxCenterX, line1Y);
-    c.font = "10px 'Press Start 2P', sans-serif";
+    c.font = "12px 'Press Start 2P', sans-serif";
+    c.fillText("Gojo: \"Recorramos el mapa, derrotemos las maldiciones y escapemos de aquí.\"", boxCenterX, line1Y);
+    c.font = "9px 'Press Start 2P', sans-serif";
     c.fillText("(Enter o toca la pantalla para continuar)", boxCenterX, line2Y);
+    c.restore();
+}
+
+function drawGojoDeathDialogue() {
+    if (!gojo.deathDialogueVisible) return;
+    const boxW = 480;
+    const boxH = 70;
+    const boxX = canvas.width / 2 - boxW / 2;
+    const boxY = 20;
+
+    c.save();
+    c.fillStyle = "rgba(0,0,0,0.8)";
+    c.fillRect(boxX, boxY, boxW, boxH);
+    c.strokeStyle = "white";
+    c.strokeRect(boxX, boxY, boxW, boxH);
+    c.fillStyle = "white";
+    c.font = "12px 'Press Start 2P', sans-serif";
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillText("Encuentra un corazón para revivir a Gojo", canvas.width / 2, boxY + boxH / 2);
     c.restore();
 }
 
@@ -1519,42 +1613,58 @@ function drawRestartButton(label) {
     };
 }
 
-let HUD_HEARTS_ZONE_X = 20;
-let HUD_HEARTS_ZONE_Y = 16;
-let HUD_HEART_SIZE = 28;
-let HUD_HEART_GAP = 6;
-let HUD_SCORE_FONT_SIZE = 12;
+// ---------------------------------------------------------------------
+// HUD EN HTML/CSS: referencias a los elementos del DOM (definidos en tu
+// HTML dentro de #game-viewport) y sincronización de su escala con el
+// tamaño real en pantalla del canvas.
+// ---------------------------------------------------------------------
+const gameViewport = document.getElementById('game-viewport');
+const hudHeartsContainer = document.getElementById('hud-hearts');
+const hudScoreValue = document.getElementById('hud-score-value');
 
-// Tamaños físicos deseados en pantalla (px reales), independientes
-// del dispositivo. Se recalculan cada vez que el canvas cambia de tamaño.
+const heartElements = []; // un <div class="hud-heart"> por cada vida máxima
+
+function buildHeartElements(maxLives) {
+    hudHeartsContainer.innerHTML = '';
+    heartElements.length = 0;
+    for (let i = 0; i < maxLives; i++) {
+        const heartEl = document.createElement('div');
+        heartEl.className = 'hud-heart';
+        heartEl.innerHTML = '<div class="heart-bg"></div><div class="heart-fill"></div>';
+        hudHeartsContainer.appendChild(heartEl);
+        heartElements.push(heartEl);
+    }
+}
+buildHeartElements(geto.maxLives);
+
+// Actualiza --hud-scale (usada por el CSS del puntaje) cada vez que el
+// canvas cambia de tamaño real en pantalla, sin importar el dispositivo.
 function updateHUDScale() {
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0) return; // canvas aún no visible
-    const displayScale = rect.width / canvas.width; // ej: 0.4 si el canvas se ve al 40% de su resolución interna
-
-    const targetHeartPx = 22;
-    const targetGapPx = 5;
-    const targetMarginPx = 14;
-    const targetFontPx = 11;
-
-    HUD_HEART_SIZE = targetHeartPx / displayScale;
-    HUD_HEART_GAP = targetGapPx / displayScale;
-    HUD_HEARTS_ZONE_X = targetMarginPx / displayScale;
-    HUD_HEARTS_ZONE_Y = targetMarginPx / displayScale;
-    HUD_SCORE_FONT_SIZE = targetFontPx / displayScale;
+    const scale = rect.width / canvas.width; // canvas.width = 1024 (resolución interna)
+    gameViewport.style.setProperty('--hud-scale', scale);
 }
+
+const hudResizeObserver = new ResizeObserver(updateHUDScale);
+hudResizeObserver.observe(canvas);
+window.addEventListener('orientationchange', updateHUDScale);
+updateHUDScale();
 
 window.addEventListener('resize', updateHUDScale);
 window.addEventListener('orientationchange', updateHUDScale);
 updateHUDScale();
 
 function drawHUD() {
-    c.save();
-    let heartDrawX = HUD_HEARTS_ZONE_X;
-    const heartDrawY = HUD_HEARTS_ZONE_Y;
-    const hasImage = heartImage.complete && heartImage.naturalWidth > 0;
-
+    // Ya no se dibuja nada en el canvas: el HUD real vive en el DOM
+    // (#hud-hearts y #hud-score, definidos en tu HTML). Esta función
+    // ahora solo SINCRONIZA esos elementos con tus variables de juego
+    // reales (geto.lives, geto.hits, score), manteniendo toda la lógica
+    // igual que antes.
     for (let i = 0; i < geto.maxLives; i++) {
+        const heartEl = heartElements[i];
+        if (!heartEl) continue;
+
         let fraction;
         if (i < geto.lives - 1) {
             fraction = 1;
@@ -1564,39 +1674,11 @@ function drawHUD() {
             fraction = 0;
         }
 
-        c.globalAlpha = 0.25;
-        if (hasImage) {
-            c.drawImage(heartImage, heartDrawX, heartDrawY, HUD_HEART_SIZE, HUD_HEART_SIZE);
-        } else {
-            c.fillStyle = "#555";
-            c.fillRect(heartDrawX, heartDrawY, HUD_HEART_SIZE, HUD_HEART_SIZE);
-        }
-
-        if (fraction > 0) {
-            c.save();
-            c.globalAlpha = 1;
-            c.beginPath();
-            c.rect(heartDrawX, heartDrawY, HUD_HEART_SIZE * fraction, HUD_HEART_SIZE);
-            c.clip();
-            if (hasImage) {
-                c.drawImage(heartImage, heartDrawX, heartDrawY, HUD_HEART_SIZE, HUD_HEART_SIZE);
-            } else {
-                c.fillStyle = "#e53935";
-                c.fillRect(heartDrawX, heartDrawY, HUD_HEART_SIZE, HUD_HEART_SIZE);
-            }
-            c.restore();
-        }
-
-        heartDrawX += HUD_HEART_SIZE + HUD_HEART_GAP;
+        const fillEl = heartEl.querySelector('.heart-fill');
+        fillEl.style.width = `${fraction * 100}%`;
     }
-    c.restore();
 
-        c.save();
-    c.fillStyle = "white";
-    c.font = `${HUD_SCORE_FONT_SIZE}px 'Press Start 2P', sans-serif`;
-    c.textAlign = "right";
-    c.fillText(`Puntos: ${score}`, canvas.width - 20, 35);
-    c.restore();
+    hudScoreValue.textContent = score;
 }
 
 function drawPauseOverlay() {
@@ -1991,7 +2073,7 @@ function start() {
         geto.attackCooldown--;
         if (geto.attackCooldown === 0) geto.attacking = false;
     }
-
+    
     if (!paused) {
         checkGojoEncounter();
         gojo.update();
@@ -1999,6 +2081,7 @@ function start() {
         if (boss) boss.update();
         checkPickups();
     }
+    gojo.updateDeathBlink(deltaTime);
 
     c.clearRect(0, 0, canvas.width, canvas.height);
     c.fillStyle = 'black';
@@ -2081,9 +2164,11 @@ function start() {
     } else {
         c.drawImage(topImage2, mapX, mapY, topImage2.width * mapScale, topImage2.height * mapScale);
     }
-
+    
     drawHUD();
     drawDialogue();
+    gojo.drawDead(mapX, mapY);
+    drawGojoDeathDialogue();
     drawDocumentViewer();
     drawInventory();
     drawPauseOverlay();
@@ -2217,6 +2302,7 @@ danceGetoImage.src = "images/danceGeto.png";
 danceGojoImage.src = "images/danceGojo.png";
 danceAuthorImage.src = "images/meDance.png";
 cakeImage.src = "images/cake.png";
+deadGojoImage.src = "images/deadGojo.png";
 
 // FIX #2: se renombran las claves "front"/"back" a "down"/"up" para
 // blackRabbit, whiteRabbit, gojo y boss. Estos personajes guardan su

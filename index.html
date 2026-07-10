@@ -23,8 +23,8 @@
         /* clamp(mínimo, ideal-en-vmin, máximo):
         nunca más chico ni más grande que los límites,
         y escala proporcional en cualquier pantalla */
-        --dpad-btn-size: clamp(50px, 13vmin, 72px);
-        --attack-btn-size: clamp(58px, 15vmin, 84px);
+        --dpad-btn-size: clamp(60px, 15vmin, 82px);
+        --attack-btn-size: clamp(68px, 18vmin, 94px);
         --top-btn-size: clamp(38px, 9vmin, 54px);
 
         /* espaciados también escalables */
@@ -211,12 +211,68 @@
 
         /* En pantallas pequeñas, controles un poco más chicos para que no
            tapen tanto juego */
-        @media (max-width: 480px) {
+       @media (max-width: 480px) {
             :root {
                 --dpad-btn-size: 54px;
                 --attack-btn-size: 64px;
                 --top-btn-size: 40px;
             }
+        }
+
+        /* =====================================================
+           HUD RESPONSIVO (corazones + puntaje), flota sobre el canvas
+           ===================================================== */
+        #game-viewport {
+            position: relative;
+            display: inline-block;
+            line-height: 0;
+        }
+
+        #hud-hearts {
+            position: absolute;
+            top: 2.78%;
+            left: 1.95%;
+            display: flex;
+            gap: 0.6%;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .hud-heart {
+            position: relative;
+            width: 2.73%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .hud-heart .heart-bg,
+        .hud-heart .heart-fill {
+            position: absolute;
+            inset: 0;
+            background-image: url('images/heart.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .hud-heart .heart-bg {
+            opacity: 0.25;
+        }
+
+        .hud-heart .heart-fill {
+            opacity: 1;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        #hud-score {
+            position: absolute;
+            top: 2.6%;
+            right: 2%;
+            z-index: 15;
+            color: white;
+            font-family: 'Press Start 2P', sans-serif;
+            font-size: calc(12px * var(--hud-scale, 1));
+            white-space: nowrap;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -240,7 +296,15 @@
         <button id="pause-btn" aria-label="Pausa">II</button>
     </div>
 
-    <canvas></canvas>
+    <div id="game-viewport">
+        <canvas></canvas>
+
+        <div id="hud-hearts" aria-label="Vidas de Geto"></div>
+
+        <div id="hud-score">
+            Puntos: <span id="hud-score-value">0</span>
+        </div>
+    </div>
 
     <script src="collisions2.js"></script>
     <script src="collisions.js"></script>

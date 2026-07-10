@@ -217,7 +217,7 @@ class AnimationController {
 // SISTEMA DE VIDAS / DAÑO
 // =====================================================================
 const HITS_PER_LIFE = 3;
-const CURSE_HITS_PER_LIFE = 1;  
+const CURSE_HITS_PER_LIFE = 2;  
 const INVULNERABILITY_MS = 1000;
 const BLINK_INTERVAL_MS = 100;
 const HIT_STUN_FRAMES = 20; // FIX: constante que faltaba y rompía applyDamage()
@@ -1108,7 +1108,7 @@ const letterImage = new Image();
 letterImage.src = "images/letter.png";
 
 const NOTES = {
-    "PN": { title: "Nota Principal", text: "Encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷" },
+    "PN": { title: "Nota Principal", text: "Explora el mapa, encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷" },
     1: { title: "Nota 1", text: "Eres muy fuerte y capáz, nunca te rindas" },
     2: { title: "Nota 2", text: "Eres lo más importante en mi vida" },
     3: { title: "Nota 3", text: "Adoro tu sonrisa, tus ojos y tus risos preciosos" },

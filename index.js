@@ -1490,11 +1490,27 @@ function closeGojoDialogue() {
 
 function drawDialogue() {
     if (!dialogueVisible) return;
-    const boxX = 40, boxY = canvas.height - 140, boxW = canvas.width - 80, boxH = 100;
-    const boxCenterX = boxX + boxW / 2;
+    const dialogueText = "Gojo: \"Hay algo en este bosque que ha estado alterando a los conejos, deberíamos investigar.\"";
+    const hintText = "(Enter o toca la pantalla para continuar)";
 
-    const line1Y = boxY + boxH * 0.35;
-    const line2Y = boxY + boxH * 0.72;
+    const DIALOGUE_MARGIN = 24;
+    const DIALOGUE_LINE_HEIGHT = 20;
+    const DIALOGUE_FONT = "12px 'Press Start 2P', sans-serif";
+
+    // Se mide el texto ANTES de saber la altura final de la caja, ya que
+    // esa altura ahora depende de cuántas líneas ocupe el diálogo.
+    c.font = DIALOGUE_FONT;
+    const maxTextWidth = canvas.width - 80 - DIALOGUE_MARGIN * 2;
+    const dialogueLines = wrapText(c, dialogueText, maxTextWidth);
+    const textBlockHeight = dialogueLines.length * DIALOGUE_LINE_HEIGHT;
+
+    // La caja crece hacia arriba según cuántas líneas necesite el texto,
+    // dejando siempre espacio fijo abajo para la pista de "Enter...".
+    const boxW = canvas.width - 80;
+    const boxH = textBlockHeight + DIALOGUE_MARGIN * 2 + 30;
+    const boxX = 40;
+    const boxY = canvas.height - boxH - 40;
+    const boxCenterX = boxX + boxW / 2;
 
     c.fillStyle = "rgba(0,0,0,0.8)";
     c.fillRect(boxX, boxY, boxW, boxH);
@@ -1502,13 +1518,14 @@ function drawDialogue() {
     c.strokeRect(boxX, boxY, boxW, boxH);
 
     c.save();
+    c.fillStyle = "white";
+    c.font = DIALOGUE_FONT;
+    drawWrappedText(c, dialogueText, boxX + DIALOGUE_MARGIN, boxY + DIALOGUE_MARGIN, maxTextWidth, DIALOGUE_LINE_HEIGHT);
+
     c.textAlign = "center";
     c.textBaseline = "middle";
-    c.fillStyle = "white";
-    c.font = "12px 'Press Start 2P', sans-serif";
-    c.fillText("Gojo: \"Recorramos el mapa, derrotemos las maldiciones y escapemos de aquí.\"", boxCenterX, line1Y);
     c.font = "9px 'Press Start 2P', sans-serif";
-    c.fillText("(Enter o toca la pantalla para continuar)", boxCenterX, line2Y);
+    c.fillText(hintText, boxCenterX, boxY + boxH - 15);
     c.restore();
 }
 

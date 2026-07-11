@@ -24,9 +24,7 @@ const attackButton = document.getElementById('attack');
 const inventoryButton = document.getElementById('inventory-btn');
 const pauseButton = document.getElementById('pause-btn');
 
-// Evita el menú contextual (long-press) en todos los botones táctiles
-// y en el canvas, para que mantener presionado nunca abra un popup
-// nativo de "Guardar imagen / Compartir / Imprimir".
+
 const touchControlButtons = [
     upButton, downButton, leftButton, rightButton,
     attackButton, inventoryButton, pauseButton
@@ -1302,7 +1300,7 @@ function drawInventory() {
 
 const PICKUP_DISTANCE = 20;
 const NOTE_POINTS = 10;
-const MAP_DARKNESS = 0.35;
+const MAP_DARKNESS = 0.15;
 
 function healGeto(amount = 1) {
     if (geto.hits > 0) {

@@ -1636,6 +1636,8 @@ function restartGame() {
     gojo.attackAnimTimer = 0;
     gojo.attackJump = null;
     gojo.attackTarget = null;
+    gojo.deathDialogueVisible = false;
+
 
     inventory.notes = [];
     inventory.letters = [];

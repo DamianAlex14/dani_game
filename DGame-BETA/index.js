@@ -24,9 +24,7 @@ const attackButton = document.getElementById('attack');
 const inventoryButton = document.getElementById('inventory-btn');
 const pauseButton = document.getElementById('pause-btn');
 
-// Evita el menú contextual (long-press) en todos los botones táctiles
-// y en el canvas, para que mantener presionado nunca abra un popup
-// nativo de "Guardar imagen / Compartir / Imprimir".
+
 const touchControlButtons = [
     upButton, downButton, leftButton, rightButton,
     attackButton, inventoryButton, pauseButton
@@ -66,7 +64,6 @@ const bossImage = new Image();
 const danceGetoImage = new Image();
 const danceGojoImage = new Image();
 const danceAuthorImage = new Image();
-const cakeImage = new Image();
 const topImage = new Image();
 const topImage2 = new Image();
 const deadGojoImage = new Image();
@@ -94,13 +91,8 @@ let PN = null;
 let groundLetter = null;
 let boss = null;
 
-// =====================================================================
-// SISTEMA DE ANIMACIÓN POR SPRITESHEET
-// =====================================================================
 const SPRITE_FRAME_COUNT = 4;
-// FIX #1: frame "idle" (parado) por defecto para todos los personajes.
-// Se usa como frame inicial y como frame de congelado al detenerse,
-// en vez de quedar en 0 o en un frame aleatorio.
+
 const IDLE_FRAME = 1;
 
 const MINIMAP_WIDTH = 160;
@@ -153,17 +145,11 @@ class AnimationController {
         this.character = character;
         this.state = "walk";
         this.direction = "front";
-        // FIX #1: el frame inicial ahora es IDLE_FRAME (2) en vez de 0,
-        // así el personaje aparece en la postura idle correcta desde el
-        // primer render (soluciona a Geto no iniciando en la postura correcta).
+     
         this.frame = IDLE_FRAME;
         this.elapsed = 0;
         this.frameDuration = frameDuration;
-        // FIX (Requerimiento 3): duración de frame DEDICADA para el estado
-        // "attack", fijada por defecto a 200ms (equivalente a "velocidad
-        // 200" pedida). Antes, el ataque reutilizaba this.frameDuration
-        // (150ms, pensado para caminar) y al tener pocos frames en un ciclo
-        // muy corto, se percibía disparado/demasiado rápido.
+     
         this.attackFrameDuration = attackFrameDuration;
         this.playing = true;
     }
@@ -179,10 +165,7 @@ class AnimationController {
     update(deltaTimeMs) {
         if (!this.playing) return;
         this.elapsed += deltaTimeMs;
-        // FIX (Requerimiento 3): se selecciona la duración de frame según
-        // el estado actual. Si es "attack", se usa attackFrameDuration
-        // (200ms); para cualquier otro estado (walk, dance, etc.) se
-        // mantiene el comportamiento original con this.frameDuration.
+     
         const currentDuration = this.state === "attack" ? this.attackFrameDuration : this.frameDuration;
         while (this.elapsed >= currentDuration) {
             this.elapsed -= currentDuration;
@@ -190,10 +173,7 @@ class AnimationController {
         }
     }
 
-    // FIX #1 y #3: detiene la reproducción y fija el frame en IDLE_FRAME (2).
-    // Se usa cada vez que un personaje deja de moverse, evitando que la
-    // animación quede congelada en un frame aleatorio o siga reproduciéndose
-    // en loop cuando en realidad está quieto.
+  
     pauseAtIdle() {
         this.playing = false;
         this.frame = IDLE_FRAME;
@@ -206,7 +186,7 @@ class AnimationController {
         return byState[this.direction] || byState.none || null;
     }
 
-    /** true si la imagen del frame actual ya cargó y es utilizable. */
+   
     isReady() {
         const img = this.getImage();
         return !!(img && img.complete && img.naturalWidth > 0);
@@ -220,25 +200,19 @@ class AnimationController {
     }
 }
 
-// =====================================================================
-// SISTEMA DE VIDAS / DAÑO
-// =====================================================================
+
 const HITS_PER_LIFE = 3;
 const CURSE_HITS_PER_LIFE = 2;  
 const INVULNERABILITY_MS = 1000;
 const BLINK_INTERVAL_MS = 100;
-const HIT_STUN_FRAMES = 20; // FIX: constante que faltaba y rompía applyDamage()
+const HIT_STUN_FRAMES = 20; 
 
-// FIX (Requerimiento 1): duración en milisegundos del "salto de ataque"
-// (ida + vuelta) que Geto y Gojo realizan sobre la maldición atacada.
-// Se comparte entre ambos personajes para que el salto y la animación de
-// "attack" (200ms por frame) queden sincronizados visualmente.
+
 const ATTACK_JUMP_DURATION = 500;
 
 const GOJO_DEATH_BLINK_TIMES = 3;          
 const GOJO_DEATH_BLINK_INTERVAL_MS = 220;
 
-// --- Sistema viejo de animación por contador de frames de juego (aún usado como fallback) ---
 const SPRITE_FRAME_SIZE = 32;
 
 function updateAnimationFrame(entity, totalFrames) {
@@ -335,7 +309,7 @@ const geto = {
 
     state: "idle",
     direction: "down",
-    // FIX #1: Geto inicia en el frame idle (2) en vez de 0.
+  
     frame: IDLE_FRAME,
     frameTimer: 0,
     frameInterval: 8,
@@ -346,13 +320,7 @@ const geto = {
     attackFrameInterval: 4,
     attackFrameCount: 3,
 
-    // ATTACK REWORK: estado del salto de ataque de Geto. Como la cámara
-    // mantiene a Geto siempre fijo en el centro de la pantalla, el
-    // "salto" ya no se simula desplazando a Geto, sino desplazando el
-    // MAPA (mapX/mapY) hasta que la maldición objetivo quede centrada.
-    // attackTarget referencia a la maldición sobre la que se saltó.
-    // jumpStartMapX/Y guardan el offset del mapa al iniciar el ataque y
-    // jumpTargetMapX/Y el offset final (mapa centrado en la maldición).
+
     attackTarget: null,
     jumpElapsed: 0,
     jumpDuration: ATTACK_JUMP_DURATION,
@@ -361,7 +329,7 @@ const geto = {
     jumpTargetMapX: 0,
     jumpTargetMapY: 0,
 
-    // FIX: Geto ahora tiene su propio AnimationController.
+  
     animation: new AnimationController("geto", 150),
 
     onDeath() {
@@ -381,18 +349,9 @@ class Gojo {
         this.followingEnabled = false;
         this.state = "idle";
         this.speed = 2;
-        // FIX #4: distancia de seguimiento reducida (antes 70) para que
-        // Gojo se mantenga mucho más cerca de Geto y el seguimiento se
-        // sienta más fluido.
+    
         this.followDistance = 50;
-        // FIX #5 (ANTI-JITTER): distancia de histéresis para detenerse.
-        // Gojo empieza a moverse solo cuando supera "followDistance" y
-        // deja de moverse solo cuando entra por debajo de "stopDistance"
-        // (menor que followDistance). Esta zona muerta evita que, al
-        // estar justo en el límite de 50px, Gojo cruce esa frontera de
-        // ida y vuelta en frames consecutivos, lo cual antes disparaba
-        // this.direction/setAnimation() constantemente y hacía que la
-        // animación de caminar pareciera reproducirse a toda velocidad.
+      
         this.stopDistance = 38;
         this.attackRange = 60;
         this.attackCooldown = 0;
@@ -403,13 +362,11 @@ class Gojo {
         this.alive = true;
         this.invulnerable = false;
         this.invulnerableUntil = 0;
-        // FIX #2: dirección inicial explícita ("down"), coincide con la
-        // clave "down" usada ahora en ANIMATION_SOURCES.gojo.
+        
         this.direction = "down";
         this.radius = 20;
 
-        // FIX #3: bandera que indica si Gojo se movió en este frame; se usa
-        // para no reproducir la animación de "walk" cuando está detenido.
+    
         this.isMoving = false;
 
         this.frame = IDLE_FRAME;
@@ -423,21 +380,14 @@ class Gojo {
         this.attackFrameCount = 3;
         this.animation = new AnimationController("gojo", 150);
 
-        // FIX (Requerimiento 2): temporizador dedicado para la animación de
-        // ataque. Mientras sea > 0, Gojo se considera "atacando" y no debe
-        // volver a la animación de caminar aunque followGeto() se ejecute
-        // en el mismo frame.
         this.attackAnimTimer = 0;
         this.attackAnimDuration = ATTACK_JUMP_DURATION;
 
-        // FIX (Requerimiento 1): estado del salto de ataque sobre la
-        // maldición objetivo. attackTarget se usa además para elevar
-        // temporalmente el orden de dibujo (z-order) de Gojo por encima
-        // de la maldición atacada.
+      
         this.attackJump = null;
         this.attackTarget = null;
 
-        // Sistema de muerte/resurrección
+ 
         this.deathActive = false;
         this.deathDialogueVisible = false;
         this.posicionMuerte = { x: 0, y: 0 };
@@ -455,7 +405,7 @@ class Gojo {
         this.blinkTimer = 0;
         this.blinkToggles = 0;
         this.blinkDone = false;
-        this.active = false; // oculta el sprite normal mientras está "muerto"
+        this.active = false; 
     }
 
     updateDeathBlink(dt) {
@@ -467,7 +417,7 @@ class Gojo {
         this.blinkToggles++;
         if (this.blinkToggles >= GOJO_DEATH_BLINK_TIMES * 2) {
             this.blinkDone = true;
-            this.blinkVisible = true; // queda fijo visible
+            this.blinkVisible = true; 
         }
     }
 
@@ -513,17 +463,10 @@ class Gojo {
         } else if (dist < this.stopDistance) {
             this.isMoving = false;
         }
-        // Si dist está entre stopDistance y followDistance, se conserva el
-        // estado anterior de isMoving (zona muerta / dead zone).
+       
 
         if (this.isMoving && dist > 0) {
-            // FIX #5 (ANTI-JITTER): el paso de movimiento ahora se escala
-            // por deltaTime (normalizado a ~60fps) en vez de aplicar
-            // "this.speed" como un valor fijo por tick. Con un paso fijo,
-            // en frames más largos Gojo podía sobrepasar (overshoot) la
-            // posición de Geto y rebotar de un lado a otro del punto de
-            // destino, generando además microcambios de signo en dx/dy
-            // que disparaban cambios de dirección en cada frame.
+           
             const normalizedDelta = Math.min(deltaTime || 16.6, 100) / (1000 / 60);
             const stepX = (dx / dist) * this.speed * normalizedDelta;
             const stepY = (dy / dist) * this.speed * normalizedDelta;
@@ -533,14 +476,7 @@ class Gojo {
             this.x = resolved.x;
             this.y = resolved.y;
 
-            // FIX #5 (ANTI-JITTER): solo se recalcula/actualiza la
-            // dirección si la distancia restante supera un pequeño umbral.
-            // Cerca del objetivo, dx/dy pueden invertir de signo por
-            // diferencias de un par de píxeles; sin este umbral, eso
-            // cambiaba this.direction en cada tick y, por lo tanto,
-            // volvía a resetear el AnimationController vía setAnimation()
-            // en Gojo.update(), produciendo el efecto de animación
-            // "acelerada"/entrecortada al acercarse a Geto.
+        
             if (dist > 4) {
                 const newDirection = Math.abs(dx) > Math.abs(dy)
                     ? (dx < 0 ? "left" : "right")
@@ -553,9 +489,7 @@ class Gojo {
             }
             updateAnimationFrame(this, this.walkFrameCount);
         } else {
-            // FIX #1 y #3: Gojo está detenido (dentro de la zona de
-            // histéresis): el frame legado queda fijo en IDLE_FRAME en
-            // vez de 0.
+            
             this.frame = IDLE_FRAME;
             this.frameTimer = 0;
         }
@@ -589,12 +523,6 @@ class Gojo {
             this.attackFrame = 0;
             this.attackFrameTimer = 0;
 
-            // FIX (Requerimiento 2): se orienta a Gojo hacia el objetivo y
-            // se dispara explícitamente el estado "attack" junto con su
-            // temporizador dedicado (attackAnimTimer). Antes NADA en esta
-            // función tocaba this.state ni ningún timer, por lo que
-            // Gojo.update() jamás detectaba que debía reproducir la
-            // animación de golpe.
             const dx = target.x - this.x;
             const dy = target.y - this.y;
             this.direction = Math.abs(dx) > Math.abs(dy)
@@ -604,14 +532,7 @@ class Gojo {
             this.state = "attack";
             this.attackAnimTimer = this.attackAnimDuration;
 
-            // ATTACK REWORK: arranca el desplazamiento de ataque de Gojo
-            // sobre la maldición/boss objetivo. startX/Y = posición actual
-            // de Gojo, targetX/Y = posición del enemigo en el instante del
-            // golpe (copia estática para que el movimiento no persiga al
-            // enemigo si este se desplaza durante la animación). A
-            // diferencia del sistema anterior, este es un movimiento de
-            // IDA ÚNICAMENTE: Gojo se queda posicionado exactamente sobre
-            // la maldición, sin regresar a su posición original.
+          
             this.attackTarget = target;
             this.attackJump = {
                 startX: this.x,
@@ -624,12 +545,7 @@ class Gojo {
         }
     }
 
-    // ATTACK REWORK: interpola la posición real (x, y) de Gojo durante el
-    // desplazamiento de ataque, moviéndolo físicamente desde su posición
-    // inicial hasta la posición EXACTA de la maldición objetivo (quedando
-    // superpuesto sobre ella). Es un movimiento de UNA SOLA DIRECCIÓN: al
-    // terminar, Gojo se fija en las coordenadas del objetivo y se queda
-    // ahí permanentemente (no regresa a la posición previa al ataque).
+
     updateAttackJump() {
         const jump = this.attackJump;
         if (!jump) return;
@@ -664,31 +580,21 @@ class Gojo {
         }
         if (!this.followingEnabled) {
             this.state = "idle";
-            // FIX #1: frame legado fijo en IDLE_FRAME en vez de 0.
+        
             this.frame = IDLE_FRAME;
             this.frameTimer = 0;
             this.animation.setAnimation("walk", this.direction);
-            // FIX #1: se usa pauseAtIdle() para garantizar que el
-            // AnimationController quede fijo en el frame idle (2).
+       
             this.animation.pauseAtIdle();
             return;
         }
 
-        // FIX (Requerimiento 2): se cuenta regresivamente el temporizador
-        // dedicado de la animación de ataque (en milisegundos, vía
-        // deltaTime real) en vez de depender de un this.state que nunca
-        // llegaba a "attack".
+
         if (this.attackAnimTimer > 0) {
             this.attackAnimTimer -= deltaTime;
             if (this.attackAnimTimer < 0) this.attackAnimTimer = 0;
         }
 
-        // FIX (Requerimiento 1 y 2): mientras el desplazamiento de ataque
-        // está activo se omite followGeto() por completo (no debe
-        // moverse "de seguimiento" y de "ataque" al mismo tiempo, y
-        // tampoco debe reorientarse/reiniciar la animación a mitad del
-        // golpe). En su lugar se interpola la posición mediante
-        // updateAttackJump().
         if (this.attackJump) {
             this.isMoving = false;
             this.updateAttackJump();
@@ -699,9 +605,6 @@ class Gojo {
 
         this.attackNearestCurse();
 
-        // FIX (Requerimiento 2): ahora sí se evalúa correctamente si Gojo
-        // está en pleno golpe (temporizador > 0) para decidir la clave de
-        // animación a reproducir.
         const isAttackingNow = this.attackAnimTimer > 0;
         if (isAttackingNow) this.state = "attack";
 
@@ -806,7 +709,7 @@ class Curse {
         this.speed = 1.3;
         this.radius = 14;
         this.size = 48; 
-        // FIX #1: frame legado inicia en IDLE_FRAME en vez de 0.
+       
         this.frame = IDLE_FRAME;
         this.frameTimer = 0;
         this.animationSpeed = 8;
@@ -865,9 +768,6 @@ class Curse {
             this.tryAttack(nearest.ref);
         }
 
-        // FIX #1: cuando el conejo no está persiguiendo (idle/attack/dying),
-        // su animación se congela en el frame idle (2) en vez de quedarse
-        // en un frame aleatorio del último ciclo de "walk".
         this.animation.setAnimation("walk", this.direction);
         if (this.state === "chase") {
             this.animation.playing = true;
@@ -961,19 +861,15 @@ class Boss {
         this.hitsPerLife = 6;
         this.retreatTimer = 0;
 
-        // FIX #2: se inicializa una dirección por defecto ("down"); antes
-        // quedaba undefined hasta el primer movimiento, lo que impedía
-        // resolver la imagen de animación mientras el Boss estaba "dormant".
         this.direction = "down";
 
-        // FIX #1: frame legado inicia en IDLE_FRAME en vez de 0.
+    
         this.frame = IDLE_FRAME;
         this.frameTimer = 0;
         this.frameInterval = 10;
         this.walkFrameCount = 4;
 
-        // FIX: propiedades de la animación de ataque que faltaban
-        // (evita NaN en updateAttackAnimationFrame).
+       
         this.attackFrame = 0;
         this.attackFrameTimer = 0;
         this.attackFrameInterval = 6;
@@ -1005,9 +901,7 @@ class Boss {
                 this.state = "approach";
             }
             this.animation.setAnimation("walk", this.direction);
-            // FIX #1: se usa pauseAtIdle() para fijar el frame idle (2)
-            // mientras el Boss está inactivo, en vez de solo pausar sin
-            // garantizar el frame.
+       
             this.animation.pauseAtIdle();
             return;
         }
@@ -1034,7 +928,7 @@ class Boss {
             if (this.retreatTimer <= 0) this.state = "approach";
         }
 
-        // FIX: sincroniza el AnimationController con el estado de la IA.
+   
         const animState = this.state === "attack" ? "attack" : "walk";
         this.animation.setAnimation(animState, this.direction);
         this.animation.playing = true;
@@ -1049,10 +943,8 @@ class Boss {
 
         const resolved = resolveMoveWithCollisions(this.x, this.y, stepX, stepY, this.radius);
 
-        // Si el movimiento quedó bloqueado (la posición resuelta es
-        // prácticamente igual a la posición actual), el Boss esquiva el
-        // obstáculo desplazándose en la dirección PERPENDICULAR a su
-        // rumbo original, en vez de quedarse atascado contra la pared.
+    
+       
         const blocked = Math.hypot(resolved.x - this.x, resolved.y - this.y) < 0.05;
         if (blocked) {
             const perpX = -stepY;
@@ -1115,10 +1007,7 @@ class Boss {
         const screenY = mapY + this.y - this.size / 2;
         c.save();
         if (this.state === "dying") c.globalAlpha = Math.max(0, 1 - this.deathTimer / 60);
-        // FIX #2: dibujo vía AnimationController con fallback a bossImage.
-        // Ahora que direction se inicializa y las claves coinciden con
-        // "up"/"down"/"left"/"right", el Boss anima correctamente en las
-        // 4 direcciones en vez de depender de un único sprite estático.
+     
         if (this.animation.isReady()) {
             this.animation.draw(c, screenX, screenY, this.size, this.size);
         } else {
@@ -1148,26 +1037,26 @@ const letterImage = new Image();
 letterImage.src = "images/letter.png";
 
 const NOTES = {
-    "PN": { title: "Nota Principal", text: "Explora el mapa, encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷 (Los controles en PC son WASD para moverse y Space para saltar, el inventario se abre con I y pausa con Enter)" },
-    1: { title: "Nota 1", text: "Eres muy fuerte y capáz, nunca te rindas" },
-    2: { title: "Nota 2", text: "Eres lo más importante en mi vida" },
-    3: { title: "Nota 3", text: "Adoro tu sonrisa, tus ojos y tus risos preciosos" },
-    4: { title: "Nota 4", text: "Admiro mucho la persona que eres, estoy realmente orgulloso de quién eres" },
-    5: { title: "Nota 5", text: "Tienes la sonrisa más preciosa que he visto" },
-    6: { title: "Nota 6", text: "Admiro lo buen estudiante, amigo, hijo, primo, y sobrino que eres" },
-    7: { title: "Nota 7", text: "Espero que este día sea un día hermoso para ti, mereces más de lo que crees, más de lo que quieres, y muchisimo más de lo que has recibido" },
-    8: { title: "Nota 8", text: "Eres una gran persona, jamás dudes del valor que tienes" },
-    9: { title: "Nota 9", text: "Eres más especial en mi vida de lo que crees" },
-    10: { title: "Nota 10", text: "Aunque esto no sea la gran cosa fue hecho con mucho amor (y algo de estrés JAJJAJA, pero sobre todo amor)" },
-    11: { title: "Nota 11", text: "Gracias por ser luz en oscuridad, y calma en tormenta, gracias por ser mi lugar seguro y apoyo" },
-    12: { title: "Nota 12", text: "Eres el sol de mi luna, el mar de mi arena y el Suguru de mi Satoru" },
-    13: { title: "Nota 13", text: "Tenerte en mi vida se siente como ese rayito de sol que pega y calienta en los días fríos, o como la brisa refrescante que sopla en los días calurosos" },
-    14: { title: "Nota 14", text: "Cada parte de tu ser me parece tan interesante, tan admirable, y tan linda, e incluso las partes de ti que no logras apreciar o que dices son defectos, para mi son maravillosas" },
-    15: { title: "Nota 15", text: "Me encanta pasar tiempo contigo, me encanta tu compañía, se siente cálida y acogedora, contigo siento que incluso en los peores momentos se puede encontrar calma" },
-    16: { title: "Nota 16", text: "Puede que no todos los días sean buenos, pero eso no significa que mañana sea igual, siempre habrá una solución al problema, y aunque no la encuentres en ese preciso instante, con calma y paciencia la encontrarás" },
-    17: { title: "Nota 17", text: "Siempre que tengas miedo, o que la tristeza invada tu mente y tu corazón puedes contar conmigo, puede que yo no sea el mejor dando consejos, o el mejor consolando, pero siempre trataré de hacerte sentir mejor, aunque sea momentáneamente, pero con hacerte olvidar tus problemas por lo menos un momento me bastaría" },
-    18: { title: "Nota 18", text: "Haces mis días bonitos" },
-    19: { title: "Nota 19", text: "19 años ya, qué se siente usar bastón corazón? 🫰🏾🥺 Broma JAJAJA" },
+    "PN": { title: "Nota Principal", text: "Explora el mapa, encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. (Los controles en PC son WASD para moverse y Space para saltar)" },
+    1: { title: "Nota 1", text: "El bosque ha estado muy ruidoso últimamente." },
+    2: { title: "Nota 2", text: "Una leyenda local habla de un jefe que solo despierta cuando siente una amenaza verdadera acercarse." },
+    3: { title: "Nota 3", text: "Explora sin miedo. Los secretos de este lugar no se revelan a quien avanza con prisa." },
+    4: { title: "Nota 4", text: "Cada obstáculo que superas te hace un poco más fuerte para el siguiente." },
+    5: { title: "Nota 5", text: "El verdadero desafío no es llegar al final, sino disfrutar el camino." },
+    6: { title: "Nota 6", text: "Equivocarse es parte del proceso. Aprender de eso es lo que cuenta." },
+    7: { title: "Nota 7", text: "Alguien dejó estas marcas en los árboles. No parecen recientes." },
+    8: { title: "Nota 8", text: "Los animales del bosque han estado comportándose extraño desde hace días." },
+    9: { title: "Nota 9", text: "Dicen que en las noches sin luna, algo se mueve entre los árboles." },
+    10: { title: "Nota 10", text: "Hay huellas que no coinciden con ningún animal conocido de por aquí." },
+    11: { title: "Nota 11", text: "Los lugareños evitan esta zona después del atardecer. Nadie explica por qué." },
+    12: { title: "Nota 12", text: "Avanza aunque no veas el final todavía." },
+    13: { title: "Nota 13", text: "El destino se construye paso a paso." },
+    14: { title: "Nota 14", text: "Sigue caminando, la respuesta está más adelante." },
+    15: { title: "Nota 15", text: "El bosque recompensa a quien sabe escuchar." },
+    16: { title: "Nota 16", text: "Cada maldición derrotada te acerca más a la salida." },
+    17: { title: "Nota 17", text: "Derrota, no evites." },
+    18: { title: "Nota 18", text: "No te detengas." },
+    19: { title: "Nota 19", text: "Por las noches se escuchan ruidos extraños provenientes de este bosque." },
 };
 
 const DOCUMENTS = {};
@@ -1177,7 +1066,7 @@ for (const key in NOTES) {
 }
 DOCUMENTS.letter1 = {
     title: "La Carta",
-    text: "Bueno, primero que nada no sé como iniciar esta carta JAJAJAJ, así que me disculpo de antemano si llega a ser rara, incómoda o algo por el estilo, la verdad no espero que sea perfecta y simplememte dejaré que las palabras salgan por si solas. Antes que nada, feliz cumpleaños preciosote, ya 19 vueltas al sol como dicen los señores JAJAJAJA, sé que no nos conocemos desde hace tanto tiempo, pero todo los momentos que he compartido a tu lado realmente los atesoro con el alma, sin importar las circunstancias de estos, eres muy importante en mi vida y en la vida de muchas personas y estoy tan feliz de que sigas aquí, estoy sumamente orgulloso de ti, no lo digo como simples palabras vacías, lo digo de verdad, eres una persona admirable, un estudiante increíble, un gran amigo y sin duda una persona maravillosa, auque tú no pienses así de ti mismo, yo no puedo no ver lo increíble que eres, y si, cada quien tiene sus defectos y cada quien cometió errores, pero de ahí es donde se aprende y se mejora, ¿no?. Yo realmente veo el esfuerzo que haces todos los días por ser mejor persona, de verdad te admiro y te veo como un ejemplo a seguir, te respeto. Esto lo estoy escribiendo un lunes 22 de junio, espero que el día de tu cumple lo pases super bien y disfrutes con las personas que quieres, que puedas disfrutar tu día como se debe y que sientas que eso es lo que mereces, sé que mi regalo no es mucho, pero ta hecho con mucho cariño para ti. Yo realmente no sé hacer cartas, pero quiero felicitarte por llegar hasta aquí, porque sé que no ha sido fácil, y aún sigue sin serlo, falta camino por recorrer, y vas bien, vas excelente, no te rindas nunca, sé que eres capáz de cumplir todo lo que te propongas, aunque tú no lo veas aún, eres muy inteligente y tienes muchas caracteristicas que te hacen único, quisiera que pudieras ver a travéz de mis ojos lo que realmente eres, nunca dudes de lo que vales, ni dejes que otros te hagan sentir que vales menos, y si en algún momento sientes que no eres importante para nadie o que nadie te ama, quiero que sepas que aquí estoy yo, mientras yo exista siempre habrá alguien que te ame con todo su ser y para quien seas la persona más importante en su vida. Una vez más FELIZ CUMPLEAÑOOOSS DANIII 🥳🥳💕💕"
+    text: "¡Felicidades hechicero, has derrotado las maldiciones y has salvado a los animales del bosque!"
 };
 
 function wrapText(ctx, text, maxWidth) {
@@ -1411,7 +1300,7 @@ function drawInventory() {
 
 const PICKUP_DISTANCE = 20;
 const NOTE_POINTS = 10;
-const MAP_DARKNESS = 0.25;
+const MAP_DARKNESS = 0.15;
 
 function healGeto(amount = 1) {
     if (geto.hits > 0) {
@@ -1498,15 +1387,12 @@ function drawDialogue() {
     const DIALOGUE_LINE_HEIGHT = 20;
     const DIALOGUE_FONT = "12px 'Press Start 2P', sans-serif";
 
-    // Se mide el texto ANTES de saber la altura final de la caja, ya que
-    // esa altura ahora depende de cuántas líneas ocupe el diálogo.
     c.font = DIALOGUE_FONT;
     const maxTextWidth = canvas.width - 80 - DIALOGUE_MARGIN * 2;
     const dialogueLines = wrapText(c, dialogueText, maxTextWidth);
     const textBlockHeight = dialogueLines.length * DIALOGUE_LINE_HEIGHT;
 
-    // La caja crece hacia arriba según cuántas líneas necesite el texto,
-    // dejando siempre espacio fijo abajo para la pista de "Enter...".
+
     const boxW = canvas.width - 80;
     const boxH = textBlockHeight + DIALOGUE_MARGIN * 2 + 30;
     const boxX = 40;
@@ -1586,7 +1472,7 @@ playerDanceAnim.setAnimation("dance", "none");
 
 function drawEndingScene() {
     c.drawImage(currentMapImage, 0, 0, canvas.width, canvas.height);
-    c.drawImage(cakeImage, canvas.width / 2 - 40, canvas.height / 2 - 20, 80, 80);
+
 
     gojoDanceAnim.update(deltaTime);
     getoDanceAnim.update(deltaTime);
@@ -1624,7 +1510,6 @@ function restartGame() {
     geto.jumpStartMapY = 0;
     geto.jumpTargetMapX = 0;
     geto.jumpTargetMapY = 0;
-    geto.direction = "down";
 
     gojo.lives = gojo.maxLives;
     gojo.hits = 0;
@@ -1688,17 +1573,12 @@ function drawRestartButton(label) {
     };
 }
 
-// ---------------------------------------------------------------------
-// HUD EN HTML/CSS: referencias a los elementos del DOM (definidos en tu
-// HTML dentro de #game-viewport) y sincronización de su escala con el
-// tamaño real en pantalla del canvas.
-// ---------------------------------------------------------------------
+
 const gameViewport = document.getElementById('game-viewport');
 const hudHeartsContainer = document.getElementById('hud-hearts');
 const hudScoreValue = document.getElementById('hud-score-value');
 
-const heartElements = []; // un <div class="hud-heart"> por cada vida máxima
-
+const heartElements = [];
 function buildHeartElements(maxLives) {
     hudHeartsContainer.innerHTML = '';
     heartElements.length = 0;
@@ -1712,12 +1592,10 @@ function buildHeartElements(maxLives) {
 }
 buildHeartElements(geto.maxLives);
 
-// Actualiza --hud-scale (usada por el CSS del puntaje) cada vez que el
-// canvas cambia de tamaño real en pantalla, sin importar el dispositivo.
 function updateHUDScale() {
     const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0) return; // canvas aún no visible
-    const scale = rect.width / canvas.width; // canvas.width = 1024 (resolución interna)
+    if (rect.width === 0) return;
+    const scale = rect.width / canvas.width; 
     gameViewport.style.setProperty('--hud-scale', scale);
 }
 
@@ -1730,44 +1608,39 @@ window.addEventListener('resize', updateHUDScale);
 window.addEventListener('orientationchange', updateHUDScale);
 updateHUDScale();
 
-/**
- * Dibuja un minimapa en la esquina superior derecha: el mapa completo
- * escalado a MINIMAP_WIDTH x MINIMAP_HEIGHT, con un punto rojo marcando
- * la posición real de Geto dentro del mundo.
- */
+
 function drawMinimap() {
     const mapImg = currentMapImage;
     if (!mapImg.complete || mapImg.naturalWidth === 0) return;
 
-    // Tamaño REAL del mundo actual (en píxeles), igual al usado para
-    // dibujar el mapa grande: mapImg.width * mapScale.
+    
     const worldWidth = mapImg.width * mapScale;
     const worldHeight = mapImg.height * mapScale;
 
     c.save();
 
-    // Fondo + borde del minimapa, para que se distinga del juego detrás.
+    
     c.fillStyle = "rgba(0,0,0,0.5)";
     c.fillRect(MINIMAP_X - 2, MINIMAP_Y - 2, MINIMAP_WIDTH + 4, MINIMAP_HEIGHT + 4);
 
-    // Recorta el dibujo del mapa para que no se salga del recuadro.
+ 
     c.beginPath();
     c.rect(MINIMAP_X, MINIMAP_Y, MINIMAP_WIDTH, MINIMAP_HEIGHT);
     c.clip();
 
     c.drawImage(mapImg, MINIMAP_X, MINIMAP_Y, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+    
     c.fillStyle = `rgba(0, 0, 0, ${MAP_DARKNESS})`;
     c.fillRect(MINIMAP_X, MINIMAP_Y, MINIMAP_WIDTH, MINIMAP_HEIGHT);
-
-    // Posición real de Geto en el mundo, igual al cálculo de centerX/centerY en start().
+   
     const worldX = -mapX + (canvas.width / 2 - playerSize / 2) + playerSize / 2;
     const worldY = -mapY + (canvas.height / 2 - playerSize / 2) + playerSize / 2;
 
-    // Convierte esa posición a la escala reducida del minimapa.
+
     const dotX = MINIMAP_X + (worldX / worldWidth) * MINIMAP_WIDTH;
     const dotY = MINIMAP_Y + (worldY / worldHeight) * MINIMAP_HEIGHT;
 
-    c.restore(); // quita el clip antes de dibujar el punto y el borde
+    c.restore(); 
 
     c.fillStyle = "#e53935";
     c.beginPath();
@@ -1780,11 +1653,7 @@ function drawMinimap() {
 }
 
 function drawHUD() {
-    // Ya no se dibuja nada en el canvas: el HUD real vive en el DOM
-    // (#hud-hearts y #hud-score, definidos en tu HTML). Esta función
-    // ahora solo SINCRONIZA esos elementos con tus variables de juego
-    // reales (geto.lives, geto.hits, score), manteniendo toda la lógica
-    // igual que antes.
+  
     for (let i = 0; i < geto.maxLives; i++) {
         const heartEl = heartElements[i];
         if (!heartEl) continue;
@@ -1914,10 +1783,6 @@ function performAttack() {
     geto.attackFrame = 0;
     geto.attackFrameTimer = 0;
 
-    // FIX (Requerimiento 1): además de aplicar daño en área a todas las
-    // maldiciones/boss dentro de rango (comportamiento original), se
-    // registra cuál es el objetivo MÁS CERCANO para usarlo como destino
-    // del ataque de Geto.
     let jumpTarget = null;
     let bestDist = Infinity;
 
@@ -1945,14 +1810,7 @@ function performAttack() {
     }
 
     if (jumpTarget) {
-        // FIX (orientación de ataque): antes de saltar, Geto voltea a
-        // mirar EXACTAMENTE hacia la maldición objetivo (basado en la
-        // posición relativa dx/dy entre Geto y el objetivo), en vez de
-        // conservar/forzar cualquier otra dirección. Este bloque solo se
-        // ejecuta cuando SÍ hay un objetivo (jumpTarget); si el ataque no
-        // impacta a ninguna maldición, currentImage/geto.direction no se
-        // tocan en absoluto y Geto simplemente conserva la dirección que
-        // ya tenía (nunca se fuerza a mirar hacia abajo por defecto).
+       
         const facingDx = jumpTarget.x - geto.x;
         const facingDy = jumpTarget.y - geto.y;
         if (Math.abs(facingDx) > Math.abs(facingDy)) {
@@ -1963,18 +1821,7 @@ function performAttack() {
             geto.direction = facingDy < 0 ? "up" : "down";
         }
 
-        // ATTACK REWORK: Geto SIEMPRE permanece fijo en el centro exacto
-        // de la pantalla (nunca cambian sus coordenadas de renderizado en
-        // el viewport). Para simular que "salta" sobre la maldición, en
-        // vez de mover a Geto se recalcula y se desplaza el MAPA
-        // (mapX/mapY) hasta que la maldición objetivo quede EXACTAMENTE
-        // centrada en pantalla — es decir, el mundo se teletransporta
-        // debajo de Geto. jumpStartMapX/Y guardan el offset de mapa
-        // actual (punto de partida de la interpolación) y
-        // jumpTargetMapX/Y el offset final que centra a la maldición.
-        // Es un movimiento de UNA SOLA DIRECCIÓN: al terminar la
-        // animación el mapa se queda fijo en la nueva posición para
-        // siempre, sin regresar jamás al offset anterior.
+       
         geto.attackTarget = jumpTarget;
         geto.jumpElapsed = 0;
         geto.jumpDuration = ATTACK_JUMP_DURATION;
@@ -2036,13 +1883,11 @@ if (pauseButton) {
     });
 }
 
-// Intento de bloqueo real de orientación horizontal (solo funciona en
-// navegadores compatibles y tras interacción del usuario; si falla o
-// no está disponible, el truco CSS de arriba sigue como respaldo).
+
 function tryLockLandscape() {
     if (document.fullscreenElement && screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {
-            // Silenciosamente ignorado: el CSS de rotación forzada cubre este caso.
+           
         });
     }
 }
@@ -2053,13 +1898,13 @@ document.body.addEventListener('click', () => {
     }
 }, { once: true });
 
-// FIX: deltaTime y lastFrameTime ahora son globales, declaradas ANTES de start().
+
 let lastFrameTime = performance.now();
 let deltaTime = 0;
 
 function start() {
     const __now = performance.now();
-    deltaTime = __now - lastFrameTime; // FIX: ya no es "const" local, reutiliza la global
+    deltaTime = __now - lastFrameTime; 
     lastFrameTime = __now;
 
     if (gameOver) {
@@ -2123,14 +1968,11 @@ function start() {
     if (getoIsMoving) {
         updateAnimationFrame(geto, geto.walkFrameCount);
     } else {
-        // FIX #1: Geto detenido se congela en el frame idle (2) en vez de 0.
         geto.frame = IDLE_FRAME;
         geto.frameTimer = 0;
     }
 
-    // FIX: sincroniza el AnimationController de Geto con la dirección
-    // actual (deducida de "currentImage", que ya maneja el input) y con
-    // el estado (walk/attack), y lo actualiza con deltaTime real.
+  
     let getoAnimDirection = "front";
     if (currentImage === getoUpImage) getoAnimDirection = "back";
     else if (currentImage === getoLeftImage) getoAnimDirection = "left";
@@ -2138,9 +1980,7 @@ function start() {
     else getoAnimDirection = "front";
 
     geto.animation.setAnimation(geto.attacking ? "attack" : "walk", getoAnimDirection);
-    // FIX #1: si Geto no se está moviendo ni atacando, su
-    // AnimationController se fija en el frame idle (2) en vez de quedar
-    // en un frame aleatorio del último ciclo de caminata.
+
     if (getoIsMoving || geto.attacking) {
         geto.animation.playing = true;
         geto.animation.update(deltaTime);
@@ -2148,17 +1988,7 @@ function start() {
         geto.animation.pauseAtIdle();
     }
 
-    // ATTACK REWORK: interpolación del "salto de ataque" de Geto. En vez
-    // de desplazar visualmente a Geto (que debe permanecer siempre fijo
-    // en el centro de la pantalla), se interpola directamente el offset
-    // del MAPA (mapX/mapY) desde su valor al iniciar el ataque
-    // (jumpStartMapX/Y) hasta el valor que deja centrada a la maldición
-    // objetivo (jumpTargetMapX/Y). Es una interpolación de IDA
-    // ÚNICAMENTE: al llegar a t=1 el mapa se queda fijo en la posición
-    // final para siempre (no hay animación de regreso), cumpliendo la
-    // regla de no-retorno. Mientras el salto está en curso, este bloque
-    // sobrescribe cualquier cambio de mapX/mapY hecho por el movimiento
-    // normal del jugador en este mismo frame, priorizando el ataque.
+   
     if (geto.attackTarget) {
         geto.jumpElapsed += deltaTime;
         const t = Math.min(1, geto.jumpElapsed / geto.jumpDuration);
@@ -2249,32 +2079,13 @@ function start() {
         c.drawImage(noteImage, mapX + PN.x - 12, mapY + PN.y - 12, 24, 24);
     }
 
-    // FIX (Y-SORTING): en vez de dibujar en un orden fijo (Geto siempre
-    // debajo, luego curses, gojo y boss siempre encima), se arma una lista
-    // de entidades dinámicas junto con su coordenada Y de mundo y se
-    // ordenan ascendentemente por esa Y antes de dibujarlas. Así, quien
-    // tenga la Y mayor (esté más abajo en pantalla) se dibuja al final —
-    // y por lo tanto queda por encima — replicando la perspectiva de
-    // profundidad típica de un juego top-down.
-    //
-    // FIX (Requerimiento 1): además, si Geto o Gojo están en pleno ataque
-    // sobre una maldición (attackTarget definido), su clave de orden
-    // ("sortY") se fuerza a "attackTarget.y + 1" en vez de su propia Y.
-    // Esto garantiza que se dibujen JUSTO DESPUÉS que la maldición
-    // atacada en el arreglo ordenado, quedando visualmente por
-    // delante/encima de ella durante la animación, sin importar la
-    // posición Y real de ambos.
     const depthEntities = [];
 
     depthEntities.push({
         y: geto.attackTarget ? geto.attackTarget.y + 1 : geto.y,
         draw: () => {
             if (isBlinkVisible(geto)) {
-                // ATTACK REWORK: Geto se dibuja SIEMPRE en las coordenadas
-                // fijas de pantalla (x, y) — el centro del viewport — sin
-                // ningún offset de dibujo adicional, ya que ahora es el
-                // mapa (mapX/mapY) el que se desplaza para dar la
-                // ilusión del salto.
+               
                 if (geto.animation.isReady()) {
                     geto.animation.draw(c, x, y, playerSize, playerSize);
                 } else {
@@ -2306,10 +2117,10 @@ function start() {
     } else {
         c.drawImage(topImage2, mapX, mapY, topImage2.width * mapScale, topImage2.height * mapScale);
     }
-    
-    c.fillStyle = `rgba(0, 0, 0, ${MAP_DARKNESS})`;
-    c.fillRect(0, 0, canvas.width, canvas.height);
 
+     c.fillStyle = `rgba(0, 0, 0, ${MAP_DARKNESS})`;
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    
     drawHUD();
     drawDialogue();
     drawMinimap();
@@ -2447,18 +2258,9 @@ bossImage.src = "images/bossFront.png";
 danceGetoImage.src = "images/danceGeto.png";
 danceGojoImage.src = "images/danceGojo.png";
 danceAuthorImage.src = "images/meDance.png";
-cakeImage.src = "images/cake.png";
 deadGojoImage.src = "images/deadGojo.png";
 
-// FIX #2: se renombran las claves "front"/"back" a "down"/"up" para
-// blackRabbit, whiteRabbit, gojo y boss. Estos personajes guardan su
-// dirección (this.direction) como "up"/"down"/"left"/"right" (no como
-// "front"/"back", que es exclusivo del esquema de Geto). Con las claves
-// antiguas, AnimationController.getImage() nunca encontraba coincidencia
-// para "up"/"down" y esos personajes se quedaban sin animación de
-// spritesheet (y por lo tanto sin animar) al moverse arriba o abajo.
-// Geto conserva front/back porque su código arma explícitamente esa
-// dirección ("front"/"back"/"left"/"right") en la función start().
+
 const ANIMATION_SOURCES = {
     blackRabbit: {
         walk: {

@@ -1148,7 +1148,7 @@ const letterImage = new Image();
 letterImage.src = "images/letter.png";
 
 const NOTES = {
-    "PN": { title: "Nota Principal", text: "Explora el mapa, encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷 (Los controles en PC son WASD para moverse y Space para saltar)" },
+    "PN": { title: "Nota Principal", text: "Explora el mapa, encuentra a Gojo y derrota las maldiciones para conseguir más notas y puntos, puedes conseguir puntos bonus si encuentras los corazones y también te regenarán 1/3 de vida a ti o a Gojo, el botón de estrella es para atacar, debes saltar sobre las maldiciones para derrotarlas, mucha suerte. Espero te guste y te diviertas precioso 😺🌷 (Los controles en PC son WASD para moverse y Space para saltar, el inventario se abre con I y pausa con Enter)" },
     1: { title: "Nota 1", text: "Eres muy fuerte y capáz, nunca te rindas" },
     2: { title: "Nota 2", text: "Eres lo más importante en mi vida" },
     3: { title: "Nota 3", text: "Adoro tu sonrisa, tus ojos y tus risos preciosos" },
@@ -1411,6 +1411,7 @@ function drawInventory() {
 
 const PICKUP_DISTANCE = 20;
 const NOTE_POINTS = 10;
+const MAP_DARKNESS = 0.25;
 
 function healGeto(amount = 1) {
     if (geto.hits > 0) {
@@ -1623,6 +1624,7 @@ function restartGame() {
     geto.jumpStartMapY = 0;
     geto.jumpTargetMapX = 0;
     geto.jumpTargetMapY = 0;
+    geto.direction = "down";
 
     gojo.lives = gojo.maxLives;
     gojo.hits = 0;
@@ -2303,6 +2305,9 @@ function start() {
         c.drawImage(topImage2, mapX, mapY, topImage2.width * mapScale, topImage2.height * mapScale);
     }
     
+    c.fillStyle = `rgba(0, 0, 0, ${MAP_DARKNESS})`;
+    c.fillRect(0, 0, canvas.width, canvas.height);
+
     drawHUD();
     drawDialogue();
     drawMinimap();

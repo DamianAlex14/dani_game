@@ -1411,7 +1411,7 @@ function drawInventory() {
 
 const PICKUP_DISTANCE = 20;
 const NOTE_POINTS = 10;
-const MAP_DARKNESS = 0.20;
+const MAP_DARKNESS = 0.15;
 
 function healGeto(amount = 1) {
     if (geto.hits > 0) {

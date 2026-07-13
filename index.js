@@ -1624,7 +1624,9 @@ function restartGame() {
     geto.jumpStartMapY = 0;
     geto.jumpTargetMapX = 0;
     geto.jumpTargetMapY = 0;
-    geto.direction = "down";
+    currentImage = getoDownImage;
+    directionKeyStack.length = 0;
+    movingUp = movingDown = movingLeft = movingRight = false;
 
     gojo.lives = gojo.maxLives;
     gojo.hits = 0;

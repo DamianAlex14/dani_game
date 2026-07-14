@@ -1326,6 +1326,7 @@ canvas.addEventListener('wheel', (e) => {
 let docTouchStartY = 0;
 let docTouchMoved = false;
 const DOC_TAP_THRESHOLD = 10;
+let suppressDocClick = false;
 
 canvas.addEventListener('touchstart', (e) => {
     if (activeDocument) {
@@ -1344,10 +1345,21 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: true });
 
 canvas.addEventListener('touchend', () => {
-    if (activeDocument && !docTouchMoved) closeDocument();
+    if (!activeDocument) return;
+    if (docTouchMoved) {
+        suppressDocClick = true;
+    } else {
+        closeDocument();
+    }
 });
 
-canvas.addEventListener('click', () => { if (activeDocument) closeDocument(); });
+canvas.addEventListener('click', () => {
+    if (suppressDocClick) {
+        suppressDocClick = false; 
+        return;
+    }
+    if (activeDocument) closeDocument();
+});
 
 let inventoryOpen = false;
 function toggleInventory() { inventoryOpen = !inventoryOpen; }
